@@ -63,6 +63,11 @@ export interface NetworkState {
   identifying: boolean;
   /** Outra aba/conexão assumiu esta sessão. */
   sessionReplaced: boolean;
+  /**
+   * O servidor fecha conexões que não se identificam em 10 s. Na tela do nome,
+   * isso não é um erro: a conexão volta sozinha quando o jogador clicar em ENTRAR.
+   */
+  standby: boolean;
   /** Última mensagem de erro para exibir ao jogador. */
   error: string | null;
   abilities: AbilityStates;
@@ -90,6 +95,7 @@ const initialState: NetworkState = {
   clockOffsetMs: 0,
   identifying: false,
   sessionReplaced: false,
+  standby: false,
   error: null,
   abilities: {},
   progress: null,
@@ -170,15 +176,18 @@ export class NetworkClient {
     this.update({ status: 'connecting' });
 
     socket.on('connect', () => {
-      this.update({ status: 'connected', error: null });
+      this.update({ status: 'connected', error: null, standby: false });
       if (this.nickname) void this.identify(this.nickname);
     });
 
     socket.on('disconnect', (reason) => {
       this.stopPing();
+      const wasIdentified = this.state.player !== null;
       this.update({ status: 'disconnected', player: null, latencyMs: null });
       if (reason === 'io server disconnect' && !this.state.error) {
-        this.update({ error: 'O servidor encerrou a conexão.' });
+        // Ainda na tela do nome: o servidor só encerrou a conexão ociosa.
+        if (!wasIdentified && !this.nickname) this.update({ standby: true });
+        else this.update({ error: 'O servidor encerrou a conexão.' });
       }
     });
 
@@ -250,6 +259,21 @@ export class NetworkClient {
 
   async identify(rawNickname: string): Promise<boolean> {
     const socket = this.socket;
+    if (socket && !socket.connected && this.state.standby) {
+      this.update({ status: 'connecting' });
+      const connected = await new Promise<boolean>((resolve) => {
+        const timer = setTimeout(() => resolve(false), REQUEST_TIMEOUT_MS);
+        socket.once('connect', () => {
+          clearTimeout(timer);
+          resolve(true);
+        });
+        socket.connect();
+      });
+      if (!connected) {
+        this.update({ error: 'Sem conexão com o servidor.' });
+        return false;
+      }
+    }
     if (!socket?.connected) {
       this.update({ error: 'Sem conexão com o servidor.' });
       return false;

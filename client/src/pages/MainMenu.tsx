@@ -142,7 +142,7 @@ export function MainMenu() {
       </main>
 
       <footer className="home-footer">
-        v{GAME_VERSION} · {net.status === 'connected' ? `${net.stats?.onlinePlayers ?? 0} online` : 'conectando ao servidor...'}
+        v{GAME_VERSION} · {net.status === 'connected' ? `${net.stats?.onlinePlayers ?? 0} online` : net.standby ? 'pronto' : 'conectando ao servidor...'}
         {net.latencyMs !== null && ` · ${Math.round(net.latencyMs)} ms`}
       </footer>
 
@@ -161,7 +161,8 @@ export function MainMenu() {
 function NameForm() {
   const net = useNetwork();
   const [nickname, setNickname] = useState(getSavedNickname);
-  const canSubmit = net.status === 'connected' && !net.identifying && nickname.trim() !== '';
+  const ready = net.status === 'connected' || net.standby;
+  const canSubmit = ready && !net.identifying && nickname.trim() !== '';
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
@@ -192,7 +193,7 @@ function NameForm() {
           </button>
         </div>
       </form>
-      {net.status !== 'connected' && <p className="muted tiny">Conectando ao servidor...</p>}
+      {!ready && <p className="muted tiny">Conectando ao servidor...</p>}
       {net.error && (
         <p className="form-error" role="alert">
           {net.error}
