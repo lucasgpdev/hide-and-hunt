@@ -117,7 +117,7 @@ export class PlayerAvatar {
     this.simple = null;
     const skin = getSkin(this.skin);
     const modelId = skin.model ?? (this.team === 'HUNTERS' ? 'soldier' : 'xbot');
-    this.animated = AnimatedCharacter.create(modelId, this.skin, this.team) ?? null;
+    this.animated = AnimatedCharacter.create(modelId, this.skin, this.team, hashSeed(this.playerId)) ?? null;
     if (this.animated) {
       this.body.add(this.animated.root);
     } else {
@@ -179,4 +179,11 @@ function makeNameTexture(name: string, team: Team | null): THREE.CanvasTexture {
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
   return texture;
+}
+
+/** Número estável a partir do id do jogador (varia o visual padrão). */
+function hashSeed(id: string): number {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0;
+  return Math.abs(h);
 }

@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { loadQuaternius } from './quaternius';
 
 /**
  * Modelos de personagem rigados com animações de captura de movimento.
@@ -29,6 +30,7 @@ let loading: Promise<void> | null = null;
 export function preloadCharacters(): Promise<void> {
   loading ??= (async () => {
     const loader = new GLTFLoader();
+    const realistic = loadQuaternius(loader);
     await Promise.all(
       (Object.keys(FILES) as CharacterModelId[]).map(async (id) => {
         try {
@@ -41,6 +43,7 @@ export function preloadCharacters(): Promise<void> {
         }
       }),
     );
+    await realistic;
   })();
   return loading;
 }

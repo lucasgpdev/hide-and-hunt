@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { levelFromXp, SKINS } from '@hh/shared';
 import { playSound } from '../../audio/sound';
 import { useNetwork } from '../../hooks/useNetwork';
 import { network } from '../../multiplayer/NetworkClient';
 import { Modal } from '../Modal';
+import { cachedPortrait, onPortrait, renderPortraits } from '../../game/characters/skinPortraits';
 
 /**
  * LOJA de visuais. Moedas são ganhas jogando (não há pagamento real).
@@ -13,6 +14,15 @@ export function ShopPanel({ onClose }: { onClose: () => void }) {
   const { profile } = useNetwork();
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null);
+  const [, setPortraitsReady] = useState(0);
+
+  useEffect(() => {
+    const stop = onPortrait(() => setPortraitsReady((n) => n + 1));
+    void renderPortraits(SKINS.map((skin) => skin.id));
+    return () => {
+      stop();
+    };
+  }, []);
 
   if (!profile) return null;
   const level = levelFromXp(profile.xp);
@@ -44,8 +54,14 @@ export function ShopPanel({ onClose }: { onClose: () => void }) {
           const locked = level < skin.minLevel;
           return (
             <div key={skin.id} className={`shop-item ${equipped ? 'shop-item--equipped' : ''}`}>
-              <div className="shop-swatch" style={{ background: `linear-gradient(135deg, ${skin.color} 60%, ${skin.accent} 60%)` }} />
+              <div
+                className="shop-swatch shop-portrait"
+                style={{ background: `radial-gradient(circle at 50% 35%, ${skin.accent}55, ${skin.color}22 55%, #0d0f14 100%)` }}
+              >
+                {cachedPortrait(skin.id) && <img src={cachedPortrait(skin.id)} alt={skin.name} draggable={false} />}
+              </div>
               <div className="shop-name">{skin.name}</div>
+              {skin.description && <div className="tiny muted shop-description">{skin.description}</div>}
               <div className="shop-price">{skin.price === 0 ? 'Grátis' : `${skin.price} moedas`}</div>
               {locked && !owned && <div className="tiny muted">Nível {skin.minLevel}</div>}
               {equipped ? (

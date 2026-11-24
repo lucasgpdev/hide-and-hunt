@@ -24,7 +24,8 @@ Jogo multiplayer 3D de Prop Hunt para navegador. Os escondidos se transformam em
 - Conta de convidado automática, com opção de **criar usuário e senha** para jogar em outro navegador.
 - XP, níveis, moedas, **14 conquistas**, **missões diárias e semanais**, **passe de temporada** (20 níveis), **ranking** mundial ou da temporada, por modo.
 - **Amigos** por código (`Nome#1234`), pedidos, convites para a sala, "entrar junto" e perfil público.
-- **Loja** de visuais e efeitos de transformação (só aparência, sem vantagem).
+- **Personagens realistas** (CC0, Quaternius) com proporções de jogo de esconde-esconde e **skins originais** de clima sombrio e divertido: Palhaço da Meia-Noite, Coelho Sinistro, Cabeça de Abóbora, Zelador da Peste, Vigia Noturno e outras.
+- **Loja** de visuais com retrato 3D de cada skin e efeitos de transformação (só aparência, sem vantagem).
 - **Moderação**: denúncias no placar, punição por abandono, reputação e painel de administração em `/#admin`.
 
 **Gráficos e som**

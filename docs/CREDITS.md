@@ -9,6 +9,11 @@ Nenhum modelo, textura, animação ou som foi copiado de outros jogos. Tudo abai
 | `Soldier.glb` | Personagem e animações do [Mixamo](https://www.mixamo.com) (Adobe), na versão distribuída nos exemplos do [three.js](https://github.com/mrdoob/three.js/tree/dev/examples/models/gltf) | Termos do Mixamo: uso livre em projetos pessoais e comerciais, **inclusive jogos**. Não é permitido redistribuir os arquivos sozinhos como pacote de modelos. |
 | `Xbot.glb` | Mixamo (Adobe), também dos exemplos do three.js | Mesmos termos do Mixamo |
 | `RobotExpressive.glb` | Modelo de Tomás Laulhé ([Quaternius](https://quaternius.com)), ajustes de Don McCurdy, dos exemplos do three.js | CC0 1.0 (domínio público) |
+| `q_Male_*.glb`, `q_Female_*.glb` (roupas) | [Modular Character Outfits – Fantasy](https://quaternius.itch.io/modular-character-outfits-fantasy), de Quaternius | CC0 1.0 (domínio público) |
+| `q_Superhero_*_FullBody.glb` (rostos), `q_Hair_*.glb` | [Universal Base Characters](https://quaternius.itch.io/universal-base-characters), de Quaternius | CC0 1.0 (domínio público) |
+| `q_animations.glb` | [Universal Animation Library](https://quaternius.itch.io/universal-animation-library), de Quaternius (faixas de escala removidas) | CC0 1.0 (domínio público) |
+
+Os personagens realistas são montados no jogo: roupa + rosto + cabelo no mesmo esqueleto, com cabeça e mãos um pouco maiores (proporção de jogo de esconde-esconde). As cores, os olhos brilhantes e os **acessórios** das skins (máscara de porcelana, nariz de palhaço, cartola, cabeça de coelho, cabeça de abóbora, fone neon, máscara de vigia, máscara de gás e capa) são originais deste projeto, feitos por código. Nenhuma skin reproduz personagens de outras obras nem pessoas reais.
 
 Se o jogo for publicado comercialmente, vale reler os termos atuais do Mixamo em <https://helpx.adobe.com/creative-cloud/faq/mixamo-faq.html>.
 
