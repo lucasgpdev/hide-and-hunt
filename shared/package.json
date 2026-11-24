@@ -1,0 +1,22 @@
+{
+  "name": "@hh/shared",
+  "version": "0.3.0",
+  "private": true,
+  "description": "Tipos, constantes e validações compartilhadas entre cliente e servidor",
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "zod": "^4.6.7",
+    "@dimforge/rapier3d-compat": "^0.21.0"
+  }
+}

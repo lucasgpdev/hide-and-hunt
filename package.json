@@ -1,0 +1,36 @@
+{
+  "name": "hide-and-hunt",
+  "version": "0.3.0",
+  "private": true,
+  "description": "HIDE & HUNT — jogo multiplayer 3D de Prop Hunt para navegador",
+  "type": "module",
+  "workspaces": [
+    "shared",
+    "server",
+    "client"
+  ],
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "concurrently -k -n server,client -c cyan,magenta \"npm run dev -w @hh/server\" \"npm run dev -w @hh/client\"",
+    "dev:server": "npm run dev -w @hh/server",
+    "dev:client": "npm run dev -w @hh/client",
+    "build": "npm run build -w @hh/shared && npm run build -w @hh/server && npm run build -w @hh/client",
+    "start": "npm run start -w @hh/server",
+    "typecheck": "npm run typecheck -w @hh/shared && npm run typecheck -w @hh/server && npm run typecheck -w @hh/client && tsc -p tests/tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:up": "docker compose up -d postgres",
+    "db:down": "docker compose down",
+    "clean": "node scripts/clean.mjs",
+    "test:load": "node --conditions=source --import tsx tests/load/loadTest.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.0",
+    "concurrently": "^10.0.7",
+    "socket.io-client": "^4.8.4",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.1"
+  }
+}

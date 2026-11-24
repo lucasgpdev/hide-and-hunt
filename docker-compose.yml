@@ -1,0 +1,53 @@
+# Serviços de apoio para desenvolvimento local.
+#
+#   npm run db:up            -> inicia só o PostgreSQL
+#   docker compose --profile redis up -d   -> PostgreSQL + Redis (opcional)
+#   npm run db:down          -> para os serviços (os dados ficam no volume)
+
+name: hide-and-hunt
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: hidehunt
+      POSTGRES_PASSWORD: hidehunt_dev
+      POSTGRES_DB: hidehunt
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U hidehunt -d hidehunt']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Reservado para matchmaking e múltiplas instâncias no futuro (item 2).
+  redis:
+    image: redis:7-alpine
+    profiles: ['redis']
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+
+  # Jogo completo (servidor + cliente) para produção ou testes locais:
+  #   ADMIN_TOKEN=<token com 24+ caracteres> docker compose --profile app up -d --build
+  app:
+    build: .
+    profiles: ['app']
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://hidehunt:hidehunt_dev@postgres:5432/hidehunt
+      CLIENT_ORIGIN: ${CLIENT_ORIGIN:-http://localhost:3001}
+      ADMIN_TOKEN: ${ADMIN_TOKEN:-}
+      LOG_LEVEL: info
+    ports:
+      - '3001:3001'
+
+volumes:
+  postgres-data:
