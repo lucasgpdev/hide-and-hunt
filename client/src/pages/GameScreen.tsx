@@ -44,7 +44,12 @@ export function GameScreen() {
     if (!container || !localId) return;
     void (async () => {
       try {
-        const [RAPIER, { Game }] = await Promise.all([loadRapier(), import('../game/core/Game'), preloadCharacters()]);
+        const [RAPIER, { Game }] = await Promise.all([
+          loadRapier(),
+          import('../game/core/Game'),
+          preloadCharacters(),
+          import('../game/objects/propModels').then((m) => m.preloadPropModels()),
+        ]);
         if (cancelled) return;
         const game = new Game(container, RAPIER, network, localId);
         gameRef.current = game;

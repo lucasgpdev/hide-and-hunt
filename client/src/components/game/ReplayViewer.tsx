@@ -23,8 +23,11 @@ export function ReplayViewer({ replay, onClose }: { replay: ReplayData; onClose:
     if (!container) return;
     let disposed = false;
     let lastUi = 0;
-    void import('../../game/replay/ReplayPlayer')
-      .then(({ ReplayPlayer }) => {
+    void Promise.all([
+      import('../../game/replay/ReplayPlayer'),
+      import('../../game/objects/propModels').then((m) => m.preloadPropModels()),
+    ])
+      .then(([{ ReplayPlayer }]) => {
         if (disposed) return;
         const player = new ReplayPlayer(container, replay, settingsStore.get());
         player.onTick = (f) => {

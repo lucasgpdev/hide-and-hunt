@@ -380,8 +380,86 @@ const factories: Record<string, ModelFactory> = {
 
 const fallback: ModelFactory = (b) => b.box(0.5, 0.5, 0.5, '#888888');
 
+// ---------- modelos realistas (Poly Haven, CC0) ----------
+
+interface RealisticModel {
+  file: string;
+  /** Mantém só as partes desejadas (alguns arquivos trazem duas variações lado a lado). */
+  keep?: (nodeName: string) => boolean;
+}
+
+/**
+ * Objetos fotoescaneados do Poly Haven (CC0), em public/models/props.
+ * Cada um é ajustado ao tamanho do tipo no catálogo (mesma altura e base no chão),
+ * então colisão, transformação e mira continuam iguais. Os demais tipos usam
+ * os modelos feitos por código acima.
+ */
+const REALISTIC: Record<string, RealisticModel> = {
+  chair: { file: 'ph_SchoolChair.glb' },
+  school_desk: { file: 'ph_SchoolDesk.glb' },
+  table: { file: 'ph_dining_table.glb', keep: (n) => !n.includes('cloth') },
+  sofa: { file: 'ph_Sofa.glb' },
+  cabinet: { file: 'ph_painted_wooden_cabinet_02.glb' },
+  trash_can: { file: 'ph_metal_trash_can.glb', keep: (n) => !n.includes('rust') && !n.includes('lid') },
+  box: { file: 'ph_cardboard_box.glb' },
+  suitcase: { file: 'ph_vintage_suitcase.glb', keep: (n) => n.startsWith('vintage_suitcase_01') },
+  clock: { file: 'ph_wall_clock.glb' },
+};
+
+const templates = new Map<string, THREE.Object3D>();
+let preloading: Promise<void> | null = null;
+
+/** Carrega os modelos realistas uma vez (na tela de carregamento). Falhas usam o modelo por código. */
+export function preloadPropModels(): Promise<void> {
+  preloading ??= (async () => {
+    const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
+    const loader = new GLTFLoader();
+    await Promise.all(
+      Object.entries(REALISTIC).map(async ([typeId, def]) => {
+        const type = getPropType(typeId);
+        if (!type) return;
+        try {
+          const gltf = await loader.loadAsync(`/models/props/${def.file}`);
+          const scene = gltf.scene;
+          if (def.keep) {
+            for (const child of [...scene.children]) if (!def.keep(child.name)) child.removeFromParent();
+          }
+          scene.updateMatrixWorld(true);
+          const box = new THREE.Box3().setFromObject(scene);
+          const size = box.getSize(new THREE.Vector3());
+          const [sx, sy, sz] = type.size;
+          // Mesma altura do catálogo, sem passar muito da base do colisor.
+          const scale = Math.min(sy / Math.max(size.y, 1e-3), (sx * 1.2) / Math.max(size.x, 1e-3), (sz * 1.2) / Math.max(size.z, 1e-3));
+          const center = box.getCenter(new THREE.Vector3());
+          scene.scale.setScalar(scale);
+          scene.position.set(-center.x * scale, -box.min.y * scale, -center.z * scale);
+          scene.traverse((child) => {
+            const mesh = child as THREE.Mesh;
+            if (!mesh.isMesh) return;
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+          });
+          const holder = new THREE.Group();
+          holder.add(scene);
+          templates.set(typeId, holder);
+        } catch (error) {
+          console.warn(`Modelo realista de ${typeId} indisponível; usando o modelo simples.`, error);
+        }
+      }),
+    );
+  })();
+  return preloading;
+}
+
 /** Cria o modelo de um tipo de objeto (novo grupo a cada chamada). */
 export function createPropModel(typeId: string): THREE.Group {
+  const template = templates.get(typeId);
+  if (template) {
+    // Clones compartilham geometria e materiais (memória e chamadas de desenho menores).
+    const group = template.clone(true) as THREE.Group;
+    group.name = getPropType(typeId)?.name ?? typeId;
+    return group;
+  }
   const builder = new ModelBuilder();
   (factories[typeId] ?? fallback)(builder);
   const type = getPropType(typeId);

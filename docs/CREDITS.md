@@ -12,13 +12,29 @@ Nenhum modelo, textura, animação ou som foi copiado de outros jogos. Tudo abai
 
 Se o jogo for publicado comercialmente, vale reler os termos atuais do Mixamo em <https://helpx.adobe.com/creative-cloud/faq/mixamo-faq.html>.
 
+## Objetos realistas (`client/public/models/props`)
+
+Modelos fotoescaneados do [Poly Haven](https://polyhaven.com/models), licença **CC0 1.0** (domínio público). Foram convertidos para GLB, com texturas reduzidas para 512 px em WebP. Cada um substitui o modelo feito por código do tipo correspondente; se o arquivo não carregar, o jogo volta ao modelo por código.
+
+| Tipo no jogo | Modelo Poly Haven |
+| --- | --- |
+| Cadeira | SchoolChair_01 |
+| Carteira escolar | SchoolDesk_01 |
+| Mesa | dining_table (sem a toalha) |
+| Sofá | Sofa_01 |
+| Armário | painted_wooden_cabinet_02 |
+| Lixeira | metal_trash_can (variação sem ferrugem) |
+| Caixa | cardboard_box_01 |
+| Mala | vintage_suitcase (variação 01) |
+| Relógio | wall_clock |
+
 ## Iluminação de ambiente (HDRI)
 
 Arquivos `lobby`, `lab`, `hall`, `apartment`, `studio` e `night` do pacote [`@pmndrs/assets`](https://github.com/pmndrs/assets) — seleção de HDRIs do [Poly Haven](https://polyhaven.com/hdris) reduzidos para 512×512. Licença **CC0 1.0**.
 
 ## Feito para este projeto
 
-- Todos os **objetos** (27 tipos), **cenários** e **mapas**: geometria gerada por código.
+- Os demais **objetos**, os **cenários** e os **mapas**: geometria gerada por código.
 - Todas as **texturas** (piso, azulejo, madeira, mármore, concreto, asfalto, grama, tecido, metal, papelão...): geradas por código em canvas.
 - Todos os **sons**: sintetizados no navegador com Web Audio.
 - Interface, ícones e textos.
