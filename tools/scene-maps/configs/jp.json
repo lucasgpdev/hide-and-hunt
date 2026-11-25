@@ -1,0 +1,36 @@
+{
+ "src": "/tmp/maps/sc/classroom/classroom_core.gltf",
+ "out": "/tmp/mapout/jp",
+ "scale": 1,
+ "bounds": [
+  -4.45,
+  -5.92,
+  4.45,
+  5.92
+ ],
+ "wallHeight": 3.0,
+ "props": [
+  {
+   "id": "jp_desk",
+   "name": "Carteira japonesa",
+   "include": "(Chair|Rubber)",
+   "height": [
+    0.5,
+    1.2
+   ],
+   "maxFoot": 1.2
+  },
+  {
+   "id": "jp_bin",
+   "name": "Lixeira de sala",
+   "include": "Bin",
+   "height": [
+    0.2,
+    0.6
+   ],
+   "maxFoot": 0.8,
+   "tol": 0.002
+  }
+ ],
+ "floorY": 0.0
+}

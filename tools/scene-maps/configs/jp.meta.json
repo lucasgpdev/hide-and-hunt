@@ -1,0 +1,20 @@
+{
+ "name": "Sala de Aula Japonesa",
+ "description": "Sala ampla com carteiras em fileiras, tablado e janelas para o corredor.",
+ "source": "Japanese Classroom (NovaZeeke, CC-BY 3.0)",
+ "theme": {
+  "background": "#dfe7ef",
+  "floor": "#8a6a4a",
+  "wall": "#e8e4dc",
+  "ambient": "#ffffff",
+  "fog": "#dfe7ef"
+ },
+ "sunFrom": [
+  -6,
+  5,
+  2
+ ],
+ "sunIntensity": 1.4,
+ "lightColor": "#f4f8ff",
+ "lightIntensity": 0.13
+}

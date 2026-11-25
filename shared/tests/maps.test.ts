@@ -18,9 +18,9 @@ beforeAll(async () => {
 });
 
 describe('Catálogo', () => {
-  it('tem os 12 mapas planejados e os objetos exigidos', () => {
-    expect(MAP_CATALOG).toHaveLength(12);
-    expect(PLAYABLE_MAP_IDS).toHaveLength(12);
+  it('tem os mapas da rotação e os objetos exigidos', () => {
+    expect(MAP_CATALOG).toHaveLength(17);
+    expect(PLAYABLE_MAP_IDS).toHaveLength(6);
     for (const entry of MAP_CATALOG) expect(getMap(entry.id), entry.id).toBeDefined();
     expect(PROP_TYPES.length).toBeGreaterThanOrEqual(24);
     expect(new Set(PROP_TYPES.map((p) => p.id)).size).toBe(PROP_TYPES.length);

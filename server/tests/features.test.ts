@@ -27,7 +27,7 @@ function setup(settings: Partial<typeof DEFAULT_ROOM_SETTINGS> = {}, playerCount
   const room = new Room({
     code: 'FEAT01',
     isPrivate: true,
-    settings: { ...DEFAULT_ROOM_SETTINGS, mapVoting: false, prepSeconds: 5, hidingSeconds: 10, huntingSeconds: 60, randomEvents: false, ...settings },
+    settings: { ...DEFAULT_ROOM_SETTINGS, mapId: 'supermarket', mapVoting: false, prepSeconds: 5, hidingSeconds: 10, huntingSeconds: 60, randomEvents: false, ...settings },
     output,
     createPhysics: createRoomPhysics,
     now: () => now,

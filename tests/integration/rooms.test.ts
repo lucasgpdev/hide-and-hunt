@@ -37,14 +37,14 @@ describe('Salas e partidas (integração)', () => {
     const guest = await player('Convidado');
 
     const created = await host.client.timeout(3000).emitWithAck(NetEvent.CreateRoom, {
-      settings: { prepSeconds: 5, mapId: 'senai_classroom', mapVoting: false },
+      settings: { prepSeconds: 5, mapId: 'jp_classroom', mapVoting: false },
     });
     expect(created.ok).toBe(true);
     if (!created.ok) return;
     const code = created.room.code;
     expect(code).toMatch(/^[A-Z0-9]{6}$/);
     expect(created.room.hostId).toBe(host.id);
-    expect(created.room.settings.mapId).toBe('senai_classroom');
+    expect(created.room.settings.mapId).toBe('jp_classroom');
     expect(created.room.mapId).toBe('lobby'); // espera no lobby 3D
 
     const wrong = await guest.client.timeout(3000).emitWithAck(NetEvent.JoinRoom, { code: 'ZZZZZZ' });
@@ -74,7 +74,7 @@ describe('Salas e partidas (integração)', () => {
     const host = await player('Regras');
     const invalid = await host.client
       .timeout(3000)
-      .emitWithAck(NetEvent.CreateRoom, { settings: { huntingSeconds: 5, mapId: 'city' } });
+      .emitWithAck(NetEvent.CreateRoom, { settings: { huntingSeconds: 5, mapId: 'grey_room' } });
     expect(invalid).toMatchObject({ ok: false, error: { code: ErrorCode.InvalidPayload } });
   });
 

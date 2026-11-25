@@ -1,0 +1,3 @@
+{ "name": "Sala Branca", "description": "Sala de estar clara com lareira, sofás de couro e janelas com persianas.", "source": "The White Room (Jay-Artist, CC-BY 3.0)",
+  "theme": { "background": "#e2e8ee", "floor": "#7a5636", "wall": "#f2f0ec", "ambient": "#fff4e6", "fog": "#e2e8ee" },
+  "sunFrom": [0.5, 4, -6], "sunIntensity": 1.5, "lightColor": "#ffe7c4", "lightIntensity": 0.18 }

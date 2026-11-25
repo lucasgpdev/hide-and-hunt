@@ -37,6 +37,20 @@ Modelos fotoescaneados do [Poly Haven](https://polyhaven.com/models), licença *
 
 Cena **Classroom**, de Christophe Seux, dos [arquivos de demonstração do Blender](https://www.blender.org/download/demo-files/), licença **CC0 1.0** (domínio público). Usamos a versão glTF do repositório [gltf-research-scenes](https://github.com/ErfanMo77/gltf-research-scenes) (`scenes/classroom2`). Mudanças feitas aqui: as carteiras, as poltronas de couro e o cesto de papel foram separados como objetos transformáveis (`cr_desk.glb`, `cr_leather_chair.glb`, `cr_wastebasket.glb`); as portas foram abertas a 90°; as bolinhas de papel e a luz embutida foram removidas; texturas reduzidas (WebP, até 1024 px) e geometria simplificada e comprimida com meshopt. As colisões do mapa são caixas invisíveis medidas a partir da cena.
 
+## Mapas a partir de cenas de renderização (`client/public/models/maps/*.glb`, `props/sc_*.glb`)
+
+Versões glTF do repositório [gltf-research-scenes](https://github.com/ErfanMo77/gltf-research-scenes), baseadas nas cenas publicadas por [Benedikt Bitterli](https://benedikt-bitterli.me/resources/). Licença **CC-BY 3.0**: podem ser usadas e modificadas, inclusive comercialmente, com crédito aos autores:
+
+| Mapa | Cena original | Autor |
+| --- | --- | --- |
+| Sala de Aula Japonesa (`jp_classroom`) | [Japanese Classroom](http://www.blendswap.com/blends/view/75940) | NovaZeeke |
+| Cozinha Rústica (`country_kitchen`) | [Country Kitchen](http://www.blendswap.com/blends/view/42851) | Jay-Artist |
+| Sala Branca (`white_room`) | [The White Room](http://www.blendswap.com/blends/view/41683) | Jay-Artist |
+| Sala Cinza (`grey_room`) | [The Grey & White Room](http://www.blendswap.com/blends/view/75795) | Wig42 |
+| Sala de Café da Manhã (`breakfast_room`) | [The Breakfast Room](http://www.blendswap.com/blends/view/75431) | Wig42 |
+
+Mudanças feitas aqui (com as ferramentas de `tools/scene-maps`): objetos repetidos (carteiras, cadeiras, poltronas, abajur, almofadas, plantas, lixeira) separados como objetos transformáveis; colisão gerada a partir da geometria; luzes embutidas removidas; texturas reduzidas (WebP) e geometria simplificada e comprimida (meshopt); a Sala de Café da Manhã foi reduzida para a escala real. Os mapas antigos, feitos por código, continuam no projeto, mas fora da rotação.
+
 ## Iluminação de ambiente (HDRI)
 
 Arquivos `lobby`, `lab`, `hall`, `apartment`, `studio` e `night` do pacote [`@pmndrs/assets`](https://github.com/pmndrs/assets) — seleção de HDRIs do [Poly Haven](https://polyhaven.com/hdris) reduzidos para 512×512. Licença **CC0 1.0**.

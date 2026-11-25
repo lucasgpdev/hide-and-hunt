@@ -6,6 +6,10 @@
  * A mecânica de transformação não precisa mudar.
  */
 
+import { SCENE_PROPS } from './sceneProps.js';
+
+export { SCENE_PROPS };
+
 export type PropCategory = 'moveis' | 'escritorio' | 'eletronicos' | 'escola' | 'mercado' | 'utilidades' | 'decoracao';
 
 export interface PropType {
@@ -64,6 +68,8 @@ export const PROP_TYPES = [
   prop('electronic_equipment', 'Equipamento eletrônico', 'eletronicos', [0.5, 0.35, 0.4]),
   prop('nobreak', 'Nobreak', 'eletronicos', [0.18, 0.3, 0.38], 1.05),
   prop('water_cooler', 'Bebedouro', 'utilidades', [0.4, 1.1, 0.4], 0.9),
+  // Objetos separados dos cenários 3D (gerados por script).
+  ...SCENE_PROPS.map((p) => prop(p.id, p.name, 'moveis', p.size, p.speed)),
 ] as const satisfies readonly PropType[];
 
 export type PropTypeId = (typeof PROP_TYPES)[number]['id'];

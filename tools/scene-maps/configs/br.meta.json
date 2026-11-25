@@ -1,0 +1,3 @@
+{ "name": "Sala de Café da Manhã", "description": "Sala escura e elegante com mesa de mármore e cadeiras de design.", "source": "The Breakfast Room (Wig42, CC-BY 3.0)",
+  "theme": { "background": "#cfd8e2", "floor": "#5a4636", "wall": "#26303a", "ambient": "#fff1dc", "fog": "#cfd8e2" },
+  "sunFrom": [6, 3, 1], "sunIntensity": 2.0, "lightColor": "#ffe2b8", "lightIntensity": 0.22 }

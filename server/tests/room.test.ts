@@ -24,7 +24,7 @@ function createRoom(overrides: Partial<typeof DEFAULT_ROOM_SETTINGS> = {}) {
   const room = new Room({
     code: 'TESTE1',
     isPrivate: true,
-    settings: { ...DEFAULT_ROOM_SETTINGS, mapVoting: false, prepSeconds: 5, hidingSeconds: 10, huntingSeconds: 60, ...overrides },
+    settings: { ...DEFAULT_ROOM_SETTINGS, mapId: 'supermarket', mapVoting: false, prepSeconds: 5, hidingSeconds: 10, huntingSeconds: 60, ...overrides },
     output,
     createPhysics: createRoomPhysics,
     now: () => now,
@@ -218,11 +218,11 @@ describe('Room — votação e reconexão', () => {
     ctx.add('ana');
     ctx.add('bia');
     ctx.add('caio');
-    ctx.room.vote('ana', 'senai_classroom');
-    ctx.room.vote('bia', 'senai_classroom');
-    ctx.room.vote('caio', 'supermarket');
+    ctx.room.vote('ana', 'jp_classroom');
+    ctx.room.vote('bia', 'jp_classroom');
+    ctx.room.vote('caio', 'grey_room');
     ctx.room.start('ana');
-    expect(ctx.room.mapId).toBe('senai_classroom');
+    expect(ctx.room.mapId).toBe('jp_classroom');
   });
 
   it('mantém o jogador durante o tempo de reconexão e remove depois', () => {

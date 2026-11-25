@@ -1,0 +1,25 @@
+{
+ "src": "/tmp/maps/sc/living-room/living_room_core.gltf",
+ "out": "/tmp/mapout/lr",
+ "scale": 1,
+ "floorY": 0,
+ "bounds": [
+  -0.35,
+  -3.6,
+  5.05,
+  0.5
+ ],
+ "wallHeight": 2.9,
+ "props": [
+  {
+   "id": "potted_plant",
+   "name": "Planta no vaso",
+   "include": "(PlantPot|Dirt|Branches|Leaves)",
+   "height": [
+    0.4,
+    1.3
+   ],
+   "maxFoot": 0.9
+  }
+ ]
+}

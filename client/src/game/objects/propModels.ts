@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { getPropType } from '@hh/shared';
+import { getPropType, SCENE_PROPS } from '@hh/shared';
 import { canvasTexture, material, ModelBuilder, texturedMaterial, torusGeometry } from './primitives';
 
 /**
@@ -409,6 +409,8 @@ const REALISTIC: Record<string, RealisticModel> = {
   leather_chair: { file: 'cr_leather_chair.glb' },
   wastebasket: { file: 'cr_wastebasket.glb' },
 };
+
+for (const p of SCENE_PROPS) REALISTIC[p.id] = { file: p.file };
 
 const templates = new Map<string, THREE.Object3D>();
 let preloading: Promise<void> | null = null;

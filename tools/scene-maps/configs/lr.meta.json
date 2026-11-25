@@ -1,0 +1,3 @@
+{ "name": "Sala Cinza", "description": "Sala de estar elegante com sofá, plantas e janelas em arco.", "source": "The Grey & White Room (Wig42, CC-BY 3.0)",
+  "theme": { "background": "#d8e0e8", "floor": "#6e4f33", "wall": "#4a4f48", "ambient": "#fff1dc", "fog": "#d8e0e8" },
+  "sunFrom": [2, 4, 6], "sunIntensity": 1.8, "lightColor": "#ffe2b8", "lightIntensity": 0.22 }

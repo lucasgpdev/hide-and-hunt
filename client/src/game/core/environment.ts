@@ -59,4 +59,9 @@ export const MAP_ENVIRONMENT: Record<string, [EnvironmentName, number]> = {
   hotel: ['lobby', 0.5],
   city: ['night', 0.9],
   classic_classroom: ['apartment', 0.38],
+  jp_classroom: ['apartment', 0.22],
+  country_kitchen: ['apartment', 0.3],
+  white_room: ['apartment', 0.28],
+  grey_room: ['apartment', 0.34],
+  breakfast_room: ['apartment', 0.34],
 };

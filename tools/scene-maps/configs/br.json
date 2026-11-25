@@ -1,0 +1,47 @@
+{
+ "src": "/tmp/maps/sc/breakfast-room/breakfast_room_core.gltf",
+ "out": "/tmp/mapout/br",
+ "scale": 0.33,
+ "bounds": [
+  -2.05,
+  -1.48,
+  1.66,
+  3.24
+ ],
+ "wallHeight": 3.0,
+ "floorY": -0.4686,
+ "props": [
+  {
+   "id": "eames_chair",
+   "name": "Cadeira de jantar",
+   "include": "(WhitePlastic|Chrome|BlackRubber)",
+   "height": [
+    0.7,
+    1.0
+   ],
+   "maxFoot": 0.7
+  }
+ ],
+ "extras": [
+  {
+   "type": "trash_can",
+   "x": 1.35,
+   "z": 2.95,
+   "size": [
+    0.45,
+    0.75,
+    0.45
+   ]
+  },
+  {
+   "type": "potted_plant",
+   "x": -1.65,
+   "z": 2.85,
+   "size": [
+    0.62,
+    0.77,
+    0.6
+   ]
+  }
+ ]
+}
