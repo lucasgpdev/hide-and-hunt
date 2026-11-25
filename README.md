@@ -9,7 +9,7 @@ Jogo multiplayer 3D de Prop Hunt para navegador. Os escondidos se transformam em
 **Partidas**
 - **Fila pública** com escolha de modo, ou **sala privada** com código de 6 letras e regras próprias.
 - **8 modos**: Clássico, Infecção (capturado vira caçador), Caçador solitário, Duplas, Caos (recargas curtas, eventos frequentes), Sobrevivência, Competitivo (pontuação Elo) e Personalizado.
-- **11 mapas**: Supermercado, SENAI Classroom, Escola, Escritório, Mansão, Shopping, Hospital, Restaurante, Armazém, Hotel e Cidade (aberto, à noite). Todos com portas e passagens secretas; os mapas fechados também têm interruptores de luz.
+- **12 mapas**: Supermercado, SENAI Classroom, Escola, Escritório, Mansão, Shopping, Hospital, Restaurante, Armazém, Hotel, Cidade (aberto, à noite) e Sala de Aula Clássica (cenário 3D realista). Todos com portas e passagens secretas; os mapas fechados também têm interruptores de luz.
 - **Lobby 3D**: enquanto a sala espera, todos andam por um saguão com palco, fazem emotes e votam no próximo mapa.
 - **Espectador** depois de capturado, **resultados** com destaques e **replay 3D** da partida (câmera cinematográfica, livre ou seguindo um jogador; velocidade 0,5× a 4×).
 
@@ -25,6 +25,8 @@ Jogo multiplayer 3D de Prop Hunt para navegador. Os escondidos se transformam em
 - XP, níveis, moedas, **14 conquistas**, **missões diárias e semanais**, **passe de temporada** (20 níveis), **ranking** mundial ou da temporada, por modo.
 - **Amigos** por código (`Nome#1234`), pedidos, convites para a sala, "entrar junto" e perfil público.
 - **Personagens realistas** (CC0, Quaternius) com proporções de jogo de esconde-esconde e **skins originais** de clima sombrio e divertido: Palhaço da Meia-Noite, Coelho Sinistro, Cabeça de Abóbora, Zelador da Peste, Vigia Noturno e outras.
+- Mapa **Sala de Aula Clássica**: cenário realista CC0 (Classroom, de Christophe Seux) em que dá para virar as próprias carteiras da sala.
+- **Sem limite de FPS** por padrão (vai até a taxa do monitor; dá para limitar em Configurações) e rede a 30 atualizações por segundo.
 - **Loja** de visuais com retrato 3D de cada skin e efeitos de transformação (só aparência, sem vantagem).
 - **Moderação**: denúncias no placar, punição por abandono, reputação e painel de administração em `/#admin`.
 

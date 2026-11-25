@@ -98,6 +98,16 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
               <option value="high">Alta</option>
             </select>
           </label>
+          <label className="field">
+            <span>Limite de FPS</span>
+            <select value={settings.fpsLimit} onChange={(e) => set({ fpsLimit: Number(e.target.value) })}>
+              <option value={0}>Sem limite (taxa máxima do monitor)</option>
+              <option value={144}>144</option>
+              <option value={120}>120</option>
+              <option value={60}>60</option>
+              <option value={30}>30 (economia de bateria)</option>
+            </select>
+          </label>
           <Toggle label="Sombras" checked={settings.shadows} onChange={(v) => set({ shadows: v })} />
           <Slider label="Distância de renderização" value={settings.renderDistance} min={25} max={120} step={5} format={(v) => `${v} m`} onChange={(v) => set({ renderDistance: v })} />
           <Slider label="Campo de visão" value={settings.fov} min={55} max={100} step={1} format={(v) => `${v}°`} onChange={(v) => set({ fov: v })} />

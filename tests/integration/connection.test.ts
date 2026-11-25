@@ -48,7 +48,7 @@ describe('Comunicação cliente-servidor', () => {
     expect(response.player.nickname).toBe('Jogador Um');
     expect(response.player).not.toHaveProperty('sessionId');
     expect(response.server.protocolVersion).toBe(PROTOCOL_VERSION);
-    expect(response.server.tickRate).toBe(15);
+    expect(response.server.tickRate).toBe(30);
   });
 
   it('mede latência com ping após a identificação', async () => {

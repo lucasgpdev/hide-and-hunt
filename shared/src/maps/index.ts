@@ -10,6 +10,7 @@ import { buildRestaurant } from './restaurant.js';
 import { buildWarehouse } from './warehouse.js';
 import { buildHotel } from './hotel.js';
 import { buildCity } from './city.js';
+import { buildClassicClassroom } from './classicClassroom.js';
 import type { MapCatalogEntry, MapDefinition } from './types.js';
 
 export * from './types.js';
@@ -32,6 +33,12 @@ export const MAP_CATALOG: readonly MapCatalogEntry[] = [
   { id: 'warehouse', name: 'Armazém', available: true, description: 'Prateleiras, paletes e empilhadeiras.' },
   { id: 'hotel', name: 'Hotel', available: true, description: 'Recepção, quartos e elevadores.' },
   { id: 'city', name: 'Cidade', available: true, description: 'Ruas, lojas, casas e praças.' },
+  {
+    id: 'classic_classroom',
+    name: 'Sala de Aula Clássica',
+    available: true,
+    description: 'Sala de aula realista com carteiras antigas e corredor.',
+  },
 ];
 
 const builders: Record<string, () => MapDefinition> = {
@@ -47,6 +54,7 @@ const builders: Record<string, () => MapDefinition> = {
   warehouse: buildWarehouse,
   hotel: buildHotel,
   city: buildCity,
+  classic_classroom: buildClassicClassroom,
 };
 
 /** Mapa usado enquanto a sala espera jogadores (lobby 3D). */

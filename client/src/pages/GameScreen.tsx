@@ -49,6 +49,7 @@ export function GameScreen() {
           import('../game/core/Game'),
           preloadCharacters(),
           import('../game/objects/propModels').then((m) => m.preloadPropModels()),
+          import('../game/maps/mapScenes').then((m) => m.preloadMapScenes()),
         ]);
         if (cancelled) return;
         const game = new Game(container, RAPIER, network, localId);

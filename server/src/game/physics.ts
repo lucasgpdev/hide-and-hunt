@@ -1,5 +1,6 @@
 import RAPIER from '@dimforge/rapier3d-compat';
 import {
+  SERVER_TICK_RATE,
   buildMapPhysics,
   characterShapeInfo,
   createCharacterShape,
@@ -78,8 +79,9 @@ export function stepRoomPhysics(physics: RoomPhysics): void {
     }
   }
   if (!awake) return;
-  physics.world.step();
-  physics.world.step();
+  // Passo fixo de 1/30 s: tantos passos quantos cabem em um tick do servidor.
+  const steps = Math.max(1, Math.round(30 / SERVER_TICK_RATE));
+  for (let i = 0; i < steps; i++) physics.world.step();
 }
 
 /** Empurra um objeto para longe de um ponto. Devolve false se não for empurrável. */

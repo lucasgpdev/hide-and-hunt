@@ -33,6 +33,10 @@ Modelos fotoescaneados do [Poly Haven](https://polyhaven.com/models), licença *
 | Mala | vintage_suitcase (variação 01) |
 | Relógio | wall_clock |
 
+## Cenário 3D "Sala de Aula Clássica" (`client/public/models/maps/classroom.glb`)
+
+Cena **Classroom**, de Christophe Seux, dos [arquivos de demonstração do Blender](https://www.blender.org/download/demo-files/), licença **CC0 1.0** (domínio público). Usamos a versão glTF do repositório [gltf-research-scenes](https://github.com/ErfanMo77/gltf-research-scenes) (`scenes/classroom2`). Mudanças feitas aqui: as carteiras, as poltronas de couro e o cesto de papel foram separados como objetos transformáveis (`cr_desk.glb`, `cr_leather_chair.glb`, `cr_wastebasket.glb`); as portas foram abertas a 90°; as bolinhas de papel e a luz embutida foram removidas; texturas reduzidas (WebP, até 1024 px) e geometria simplificada e comprimida com meshopt. As colisões do mapa são caixas invisíveis medidas a partir da cena.
+
 ## Iluminação de ambiente (HDRI)
 
 Arquivos `lobby`, `lab`, `hall`, `apartment`, `studio` e `night` do pacote [`@pmndrs/assets`](https://github.com/pmndrs/assets) — seleção de HDRIs do [Poly Haven](https://polyhaven.com/hdris) reduzidos para 512×512. Licença **CC0 1.0**.

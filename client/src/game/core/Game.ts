@@ -410,6 +410,9 @@ export class Game {
   private readonly frame = (time: number) => {
     if (this.disposed) return;
     const now = time / 1000;
+    // Limite opcional de FPS (padrão: sem limite — vai até a taxa do monitor).
+    const limit = this.settings.fpsLimit;
+    if (limit > 0 && this.lastFrame && now - this.lastFrame < 1 / limit - 0.002) return;
     const realDt = this.lastFrame ? now - this.lastFrame : 0.016;
     // A simulação limita o passo a 50 ms; o contador de FPS usa o tempo real.
     const dt = Math.min(0.05, realDt);

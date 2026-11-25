@@ -35,9 +35,9 @@ export const BALANCE = {
   },
   network: {
     /** Envios de posição por segundo do cliente. */
-    clientSendRate: 20,
-    /** Atraso de interpolação dos outros jogadores (ms). */
-    interpolationDelayMs: 110,
+    clientSendRate: 30,
+    /** Atraso de interpolação dos outros jogadores (ms): ~2,5 atualizações do servidor. */
+    interpolationDelayMs: 85,
   },
   rooms: {
     codeLength: 6,

@@ -15,8 +15,8 @@ export const RATE_LIMIT_RULES: RateLimitRules = {
   default: { capacity: 10, refillPerSecond: 5 },
   [NetEvent.Hello]: { capacity: 3, refillPerSecond: 0.2 },
   [NetEvent.Ping]: { capacity: 5, refillPerSecond: 2 },
-  // Posição: o cliente envia 20 por segundo; a folga cobre oscilações da rede.
-  [NetEvent.Move]: { capacity: 40, refillPerSecond: 30 },
+  // Posição: o cliente envia 30 por segundo; a folga cobre oscilações da rede.
+  [NetEvent.Move]: { capacity: 60, refillPerSecond: 45 },
   [NetEvent.Transform]: { capacity: 5, refillPerSecond: 2 },
   [NetEvent.Capture]: { capacity: 6, refillPerSecond: 4 },
   [NetEvent.GetProfile]: { capacity: 5, refillPerSecond: 1 },

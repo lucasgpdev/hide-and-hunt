@@ -3,7 +3,7 @@
  */
 
 /** Atualizações de estado por segundo enviadas pelo servidor (item 4). */
-export const SERVER_TICK_RATE = 15;
+export const SERVER_TICK_RATE = 30;
 
 /** Intervalo entre medições de latência feitas pelo cliente. */
 export const PING_INTERVAL_MS = 2000;

@@ -4,6 +4,7 @@ import { getPropType, type DoorDef, type FloorSurface, type MapDefinition, type 
 import type { GameSettings } from '../../settings/settings';
 import { pbr, worldBox, type MaterialKey } from '../materials/library';
 import { createPropModel } from '../objects/propModels';
+import { cachedMapScene, loadMapScene } from './mapScenes';
 import { boxGeometry, canvasTexture, material, ModelBuilder, sphereGeometry } from '../objects/primitives';
 
 const SURFACES: Record<FloorSurface, MaterialKey> = {
@@ -73,16 +74,23 @@ export class MapView {
   ) {
     const [w, d] = map.size;
     const staticRoot = new THREE.Group();
+    const scene = map.scene;
 
-    // Pisos por zona (o piso base cobre o que sobrar).
-    staticRoot.add(this.floor(w, d, 0, 0, 'floor.concrete', 0));
-    map.zones.forEach((zone, index) => {
-      const [x0, z0, x1, z1] = zone.rect;
-      staticRoot.add(this.floor(x1 - x0, z1 - z0, (x0 + x1) / 2, (z0 + z1) / 2, SURFACES[zone.surface ?? 'tiles'], 0.002 + index * 0.0004));
-    });
+    // Pisos por zona (o piso base cobre o que sobrar). Cenários 3D já trazem piso e teto.
+    if (!scene) {
+      staticRoot.add(this.floor(w, d, 0, 0, 'floor.concrete', 0));
+      map.zones.forEach((zone, index) => {
+        const [x0, z0, x1, z1] = zone.rect;
+        staticRoot.add(this.floor(x1 - x0, z1 - z0, (x0 + x1) / 2, (z0 + z1) / 2, SURFACES[zone.surface ?? 'tiles'], 0.002 + index * 0.0004));
+      });
+    } else {
+      const ready = cachedMapScene(scene.url);
+      if (ready) this.addScene(ready);
+      else void loadMapScene(scene.url).then((loaded) => loaded && !this.disposed && this.addScene(loaded));
+    }
 
     // Teto com placas de forro (mapas abertos, como a cidade, não têm teto).
-    if (!map.outdoor) {
+    if (!map.outdoor && !scene) {
       const ceiling = new THREE.Mesh(planeGeometry(w, d), pbr('ceiling'));
       ceiling.rotation.x = Math.PI / 2;
       ceiling.position.y = map.wallHeight;
@@ -120,6 +128,11 @@ export class MapView {
     const step = Math.max(1, Math.ceil(map.lights.length / Math.max(1, maxPointLights)));
     map.lights.forEach((light, index) => {
       const outdoor = Boolean(map.outdoor);
+      if (light.hidden) {
+        // A luminária faz parte do cenário 3D: só a luz.
+        if (maxPointLights > 0 && index % step === 0) this.addPointLight(light.position, light.color, light.intensity, 0.35);
+        return;
+      }
       const panel = new THREE.Mesh(
         outdoor ? sphereGeometry(0.22, 2) : boxGeometry(1.2, 0.04, 0.6),
         new THREE.MeshStandardMaterial({ color: '#ffffff', emissive: light.color, emissiveIntensity: 2.2 }),
@@ -144,10 +157,17 @@ export class MapView {
     this.proxies.updateMatrixWorld(true);
 
     // Mapas abertos são noturnos: luar azulado no lugar da luz de janela.
-    this.hemisphere = new THREE.HemisphereLight(map.outdoor ? '#5d6f9c' : '#dfe6ff', '#3a342c', map.outdoor ? 0.25 : 0.35);
+    this.hemisphere = new THREE.HemisphereLight(map.outdoor ? '#5d6f9c' : '#dfe6ff', '#3a342c', map.outdoor ? 0.25 : scene ? 0.15 : 0.35);
     this.root.add(this.hemisphere);
-    this.sun = new THREE.DirectionalLight(map.outdoor ? '#a9bcff' : '#fff3df', map.outdoor ? 0.7 : 1.6);
-    this.sun.position.set(w * 0.15, map.wallHeight + 14, d * 0.2);
+    this.sun = new THREE.DirectionalLight(map.outdoor ? '#a9bcff' : '#fff3df', scene?.sunIntensity ?? (map.outdoor ? 0.7 : 1.6));
+    if (scene?.sunFrom) {
+      // Sol baixo entrando pelas janelas (sombras das persianas no chão).
+      const dir = new THREE.Vector3(...scene.sunFrom).normalize();
+      this.sun.position.copy(dir.multiplyScalar(14));
+      this.sun.color.set('#ffe6c2');
+    } else {
+      this.sun.position.set(w * 0.15, map.wallHeight + 14, d * 0.2);
+    }
     this.sun.castShadow = settings.shadows && settings.graphics !== 'low';
     const shadowSize = settings.graphics === 'high' ? 4096 : 2048;
     this.sun.shadow.mapSize.set(shadowSize, shadowSize);
@@ -193,7 +213,8 @@ export class MapView {
     }
     for (const panel of this.lightPanels) {
       const off = zonesOff.has(this.lightZones.get(panel) ?? '');
-      (panel.material as THREE.MeshStandardMaterial).emissiveIntensity = off ? 0.02 : 2.2 * factor;
+      const base = (panel.material as THREE.Material).userData.baseEmissive as number | undefined;
+      (panel.material as THREE.MeshStandardMaterial).emissiveIntensity = off ? 0.02 : (base ?? 2.2) * factor;
     }
   }
 
@@ -265,7 +286,45 @@ export class MapView {
     this.interactables.push(proxy);
   }
 
+  /** Cenário 3D pronto: clonado (compartilha geometria/texturas) e alinhado ao mapa. */
+  private addScene(template: THREE.Object3D): void {
+    const scene = this.map.scene;
+    if (!scene) return;
+    const clone = template.clone(true);
+    clone.position.set(...scene.offset);
+    clone.updateMatrixWorld(true);
+    const world = new THREE.Vector3();
+    clone.traverse((child) => {
+      const mesh = child as THREE.Mesh;
+      if (!mesh.isMesh || !mesh.userData.lamp) return;
+      // Cada luminária ganha material próprio para o interruptor apagar só a sua zona.
+      mesh.material = (mesh.material as THREE.MeshStandardMaterial).clone();
+      this.owned.push(mesh.material);
+      mesh.getWorldPosition(world);
+      this.lightPanels.push(mesh);
+      this.lightZones.set(mesh, this.zoneAt(world.x, world.z));
+    });
+    this.root.add(clone);
+  }
+
+  private addPointLight(position: [number, number, number], color: string, intensity: number, drop: number): void {
+    const point = new THREE.PointLight(color, intensity * 14, 16, 1.5);
+    point.position.set(position[0], position[1] - drop, position[2]);
+    point.userData.baseIntensity = point.intensity;
+    this.lightZones.set(point, this.zoneAt(position[0], position[2]));
+    this.pointLights.push(point);
+    this.root.add(point);
+  }
+
   private addSwitch(id: string, position: [number, number, number], zone: string): void {
+    if (this.map.scene) {
+      // O interruptor já existe no cenário 3D: só a caixa de interação.
+      const proxy = this.proxy(0.35, 0.35, 0.35);
+      proxy.position.set(...position);
+      proxy.userData = { switchId: id, zone };
+      this.interactables.push(proxy);
+      return;
+    }
     const b = new ModelBuilder();
     b.rbox(0.09, 0.13, 0.09, 0.01, 'plastic.white', 0, -0.065, 0);
     b.box(0.025, 0.05, 0.1, '#d8d4ca', 0, -0.025, 0);
@@ -277,7 +336,10 @@ export class MapView {
     this.interactables.push(proxy);
   }
 
+  private disposed = false;
+
   dispose(): void {
+    this.disposed = true;
     for (const item of this.owned) item.dispose();
     this.sun.shadow.map?.dispose();
     this.root.removeFromParent();
@@ -303,6 +365,12 @@ export class MapView {
   private solid(solid: Solid): THREE.Group {
     const [cx, cy, cz] = solid.center;
     const [sx, sy, sz] = solid.size;
+    if (solid.invisible) {
+      const proxy = this.proxy(sx, sy, sz);
+      proxy.position.set(cx, cy, cz);
+      this.solidMeshes.push(proxy);
+      return new THREE.Group();
+    }
     const baseY = cy - sy / 2;
     const b = new ModelBuilder();
     const alongX = sx >= sz;

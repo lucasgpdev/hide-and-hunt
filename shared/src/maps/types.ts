@@ -36,6 +36,20 @@ export interface Solid {
   /** Largura, altura, profundidade. */
   size: Vec3;
   color?: string;
+  /** Só colisão: o visual vem do cenário 3D do mapa (MapDefinition.scene). */
+  invisible?: boolean;
+}
+
+/** Cenário 3D pronto (arquivo glTF) desenhado no lugar das paredes geradas por código. */
+export interface MapScene {
+  /** Caminho do arquivo em client/public. */
+  url: string;
+  /** Deslocamento aplicado ao cenário para alinhá-lo às coordenadas do mapa. */
+  offset: Vec3;
+  /** Direção de onde vem a luz do sol (entra pelas janelas). */
+  sunFrom?: Vec3;
+  /** Intensidade do sol. */
+  sunIntensity?: number;
 }
 
 /** Objeto do cenário em que é possível se transformar. */
@@ -63,6 +77,8 @@ export interface MapLight {
   position: Vec3;
   color: string;
   intensity: number;
+  /** A luminária já faz parte do cenário 3D: só a luz é criada. */
+  hidden?: boolean;
 }
 
 /** Porta interativa (ou passagem secreta disfarçada de parede). */
@@ -102,6 +118,8 @@ export interface MapDefinition {
   doors: DoorDef[];
   switches: SwitchDef[];
   spawns: { hiders: Vec3[]; hunters: Vec3[] };
+  /** Cenário 3D pronto; as estruturas do mapa viram só colisão invisível. */
+  scene?: MapScene;
   /** Mapa aberto (sem teto), como a cidade. */
   outdoor?: boolean;
   /** Mapa usado só como lobby (não entra na votação). */

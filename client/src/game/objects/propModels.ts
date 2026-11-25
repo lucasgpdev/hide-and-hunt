@@ -404,6 +404,10 @@ const REALISTIC: Record<string, RealisticModel> = {
   box: { file: 'ph_cardboard_box.glb' },
   suitcase: { file: 'ph_vintage_suitcase.glb', keep: (n) => n.startsWith('vintage_suitcase_01') },
   clock: { file: 'ph_wall_clock.glb' },
+  // Objetos do cenário "Classroom" (Christophe Seux, CC0).
+  classroom_desk: { file: 'cr_desk.glb' },
+  leather_chair: { file: 'cr_leather_chair.glb' },
+  wastebasket: { file: 'cr_wastebasket.glb' },
 };
 
 const templates = new Map<string, THREE.Object3D>();
@@ -412,8 +416,8 @@ let preloading: Promise<void> | null = null;
 /** Carrega os modelos realistas uma vez (na tela de carregamento). Falhas usam o modelo por código. */
 export function preloadPropModels(): Promise<void> {
   preloading ??= (async () => {
-    const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
-    const loader = new GLTFLoader();
+    const { dequantize, sharedGltfLoader } = await import('../maps/mapScenes');
+    const loader = await sharedGltfLoader();
     await Promise.all(
       Object.entries(REALISTIC).map(async ([typeId, def]) => {
         const type = getPropType(typeId);
@@ -421,6 +425,7 @@ export function preloadPropModels(): Promise<void> {
         try {
           const gltf = await loader.loadAsync(`/models/props/${def.file}`);
           const scene = gltf.scene;
+          dequantize(scene);
           if (def.keep) {
             for (const child of [...scene.children]) if (!def.keep(child.name)) child.removeFromParent();
           }

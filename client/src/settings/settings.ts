@@ -72,6 +72,8 @@ export interface GameSettings {
   /** Distância de renderização (névoa e corte da câmera), em metros. */
   renderDistance: number;
   showFps: boolean;
+  /** Limite de quadros por segundo; 0 = sem limite (o navegador vai até a taxa do monitor). */
+  fpsLimit: number;
   highContrast: boolean;
   /** Mostra avisos em texto para os sons importantes. */
   visualSoundCues: boolean;
@@ -99,6 +101,7 @@ export const DEFAULT_SETTINGS: GameSettings = {
   shadows: true,
   renderDistance: 60,
   showFps: true,
+  fpsLimit: 0,
   highContrast: false,
   visualSoundCues: true,
   keys: DEFAULT_KEYS,

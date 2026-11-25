@@ -1,5 +1,6 @@
 import { randomInt } from 'node:crypto';
 import {
+  SERVER_TICK_RATE,
   BALANCE,
   ErrorCode,
   NetEvent,
@@ -101,7 +102,7 @@ export class RoomManager {
   }
 
   start(): void {
-    this.timer ??= setInterval(() => this.tick(), 1000 / 15);
+    this.timer ??= setInterval(() => this.tick(), 1000 / SERVER_TICK_RATE);
   }
 
   stop(): void {
