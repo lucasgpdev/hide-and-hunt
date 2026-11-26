@@ -1,0 +1,23 @@
+# Mantém o servidor gratuito da Render acordado: ele dorme após 15 minutos
+# sem visitas. A cada 10 minutos este job chama a rota de saúde do jogo.
+name: Manter servidor acordado
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Chamar /api/health
+        run: |
+          for i in 1 2 3; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 https://hide-and-hunt-b2i2.onrender.com/api/health || true)
+            echo "tentativa $i: HTTP $code"
+            [ "$code" = "200" ] && exit 0
+            sleep 20
+          done
+          echo "Servidor não respondeu (pode estar acordando)."
