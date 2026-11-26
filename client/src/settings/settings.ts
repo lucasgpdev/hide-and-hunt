@@ -130,10 +130,27 @@ export const DEFAULT_SETTINGS: GameSettings = {
 
 const KEY = 'hh.settings';
 
+/**
+ * Primeira vez neste aparelho: celular/tablet com pouca memória começa na
+ * qualidade baixa (o ajuste automático cuida do resto).
+ */
+function firstRunDefaults(): GameSettings {
+  try {
+    const touch = window.matchMedia?.('(pointer: coarse)').matches;
+    const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 4;
+    const cores = navigator.hardwareConcurrency ?? 4;
+    if (touch && (memory <= 4 || cores <= 4)) return { ...DEFAULT_SETTINGS, graphics: 'low', shadows: false, showFps: false };
+    if (touch) return { ...DEFAULT_SETTINGS, showFps: false };
+  } catch {
+    /* sem informações do aparelho */
+  }
+  return DEFAULT_SETTINGS;
+}
+
 function load(): GameSettings {
   try {
     const raw = localStorage.getItem(KEY);
-    if (!raw) return DEFAULT_SETTINGS;
+    if (!raw) return firstRunDefaults();
     const parsed = JSON.parse(raw) as Partial<GameSettings>;
     // O chat de voz sempre começa desligado: o jogador liga de novo (e o navegador pede o microfone).
     return { ...DEFAULT_SETTINGS, ...parsed, keys: { ...DEFAULT_KEYS, ...(parsed.keys ?? {}) }, voiceEnabled: false };

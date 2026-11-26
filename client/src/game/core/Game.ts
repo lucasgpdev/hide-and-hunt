@@ -179,7 +179,8 @@ export class Game {
     this.scene.add(this.flashlight, this.flashlight.target);
     // Luzes para as lanternas dos outros (quantidade fixa: não recompila materiais).
     this.viewModel = new ViewModel(this.camera);
-    this.remoteLights = new RemoteFlashlights(this.scene, this.settings.graphics === 'low' ? 1 : 3);
+    const phone = window.matchMedia?.('(pointer: coarse)').matches;
+    this.remoteLights = new RemoteFlashlights(this.scene, this.settings.graphics === 'low' || phone ? 1 : 3);
 
     this.applySettings(this.settings);
     this.unsubscribers.push(

@@ -7,6 +7,7 @@ import { network } from '../../multiplayer/NetworkClient';
 import { keyLabel, useSettings } from '../../settings/settings';
 import { useNetwork } from '../../hooks/useNetwork';
 import { AbilityBar, EmoteMenu } from './AbilityBar';
+import { TutorialTips } from './TutorialTips';
 
 const PHASE_LABEL: Record<RoomInfo['state'], string> = {
   WAITING: 'Aguardando jogadores',
@@ -135,6 +136,7 @@ export function Hud({ room, localId, feed, latencyMs }: Props) {
           Lanterna {hud.flashlight ? 'ligada' : 'desligada'} <kbd>{keyLabel(settings.keys.flashlight)}</kbd>
         </div>
       )}
+      <TutorialTips room={room} me={me} />
       {speakingNames.length > 0 && <div className="hud-voice">🎙 {speakingNames.join(', ')}</div>}
       {hud.emoteMenu && <EmoteMenu unlocked={net.profile?.unlockedEmotes ?? []} />}
       {inMatch && me?.alive && <AbilityBar team={me.team} abilities={net.abilities} enabled={room.settings.abilities} />}

@@ -103,7 +103,9 @@ export class MapView {
       });
       // Tufos de grama com flores (balançam com o vento) nas áreas de grama.
       if (settings.graphics !== 'low' && open.length) {
-        const density = settings.graphics === 'high' ? 5 : 3;
+        // Celular: metade da grama (o mesmo visual de longe, bem menos para desenhar).
+        const phone = typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches;
+        const density = (settings.graphics === 'high' ? 5 : 3) * (phone ? 0.5 : 1);
         const houses = map.zones.filter((z) => z.covered).map((z) => [z.rect[0] - 0.8, z.rect[1] - 0.8, z.rect[2] + 0.8, z.rect[3] + 0.8] as [number, number, number, number]);
         const sorted = [...open].sort((a, b) => area(a) - area(b));
         const yard = sorted[0]!;

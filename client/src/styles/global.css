@@ -2338,3 +2338,39 @@ kbd {
 .crosshair-capture::before { opacity: 1; border-color: rgba(255, 90, 79, 0.95); inset: -11px; animation: crosshair-pulse 0.9s ease-in-out infinite; }
 @keyframes crosshair-pulse { 50% { inset: -14px; opacity: 0.6; } }
 @media (prefers-reduced-motion: reduce) { .crosshair-capture::before { animation: none; } }
+
+/* Dicas das primeiras partidas */
+.tutorial-tip {
+  position: absolute;
+  top: max(92px, calc(env(safe-area-inset-top) + 92px));
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(460px, calc(100vw - 32px));
+  padding: 14px 16px 12px;
+  border-radius: 14px;
+  background: rgba(10, 12, 18, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(10px);
+  color: #ece9e2;
+  pointer-events: auto;
+  animation: tutorial-in 0.35s ease-out;
+}
+.tutorial-tip-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.tutorial-tip-head strong { font-size: 1rem; color: #ffd27a; }
+.tutorial-tip-count { font-size: 0.72rem; opacity: 0.6; white-space: nowrap; }
+.tutorial-tip p { margin: 6px 0 10px; font-size: 0.9rem; line-height: 1.45; }
+.tutorial-tip-actions { display: flex; gap: 8px; }
+.tutorial-tip-actions button {
+  font: inherit;
+  font-size: 0.8rem;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: inherit;
+  cursor: pointer;
+}
+.tutorial-tip-actions .tutorial-tip-off { border-color: transparent; background: none; opacity: 0.65; }
+@keyframes tutorial-in { from { opacity: 0; transform: translate(-50%, -8px); } }
+@media (prefers-reduced-motion: reduce) { .tutorial-tip { animation: none; } }
