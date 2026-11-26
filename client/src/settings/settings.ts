@@ -18,6 +18,7 @@ export const KEY_ACTIONS = [
   'ability3',
   'ability4',
   'scoreboard',
+  'camera',
 ] as const;
 export type KeyAction = (typeof KEY_ACTIONS)[number];
 
@@ -38,6 +39,7 @@ export const KEY_ACTION_LABEL: Record<KeyAction, string> = {
   ability3: 'Habilidade 3',
   ability4: 'Habilidade 4',
   scoreboard: 'Placar',
+  camera: 'Trocar câmera (1ª / 3ª pessoa)',
 };
 
 export const DEFAULT_KEYS: Record<KeyAction, string> = {
@@ -57,6 +59,7 @@ export const DEFAULT_KEYS: Record<KeyAction, string> = {
   ability3: 'Digit3',
   ability4: 'Digit4',
   scoreboard: 'Tab',
+  camera: 'KeyV',
 };
 
 /** Configurações do jogador (item 39). Salvas neste navegador. */
@@ -69,6 +72,8 @@ export interface GameSettings {
   musicVolume: number;
   graphics: 'low' | 'medium' | 'high';
   shadows: boolean;
+  /** Câmera em primeira pessoa (olhos do personagem) ou terceira (atrás dele). */
+  cameraMode: 'first' | 'third';
   /** Baixa a resolução sozinho quando o FPS cai (e volta quando melhora). */
   autoQuality: boolean;
   /** Distância de renderização (névoa e corte da câmera), em metros. */
@@ -101,6 +106,7 @@ export const DEFAULT_SETTINGS: GameSettings = {
   musicVolume: 0.35,
   graphics: 'medium',
   shadows: true,
+  cameraMode: 'first',
   autoQuality: true,
   renderDistance: 60,
   showFps: true,

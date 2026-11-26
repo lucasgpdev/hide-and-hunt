@@ -187,6 +187,8 @@ export class MapView {
     const shadowSize = settings.graphics === 'high' ? 4096 : 2048;
     this.sun.shadow.mapSize.set(shadowSize, shadowSize);
     const cam = this.sun.shadow.camera;
+    // Camada 1: o próprio corpo em 1ª pessoa (invisível para a câmera, mas faz sombra).
+    cam.layers.enable(1);
     const extent = Math.max(w, d) / 2 + 2;
     cam.left = -extent;
     cam.right = extent;

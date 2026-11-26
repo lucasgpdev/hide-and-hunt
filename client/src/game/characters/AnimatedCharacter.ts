@@ -264,6 +264,11 @@ export class AnimatedCharacter {
     }
   }
 
+  /** Emote tocando agora (a câmera de 1ª pessoa recua para mostrar). */
+  get emoting(): boolean {
+    return this.emote !== null;
+  }
+
   get availableEmotes(): string[] {
     return [...this.emoteActions.keys()];
   }

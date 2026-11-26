@@ -20,7 +20,7 @@ import {
 } from '@hh/shared';
 import { playFootstep, playSound, playSoundAt, preloadSamples, setAlarm, setAmbience, setListener, setRain, type StepSurface } from '../../audio/sound';
 import type { NetworkClient } from '../../multiplayer/NetworkClient';
-import { settingsStore, type GameSettings } from '../../settings/settings';
+import { keyLabel, settingsStore, type GameSettings } from '../../settings/settings';
 import { ThirdPersonCamera } from '../camera/ThirdPersonCamera';
 import { PlayerAvatar } from '../characters/PlayerAvatar';
 import { RemotePlayers } from '../characters/RemotePlayers';
@@ -112,6 +112,7 @@ export class Game {
   private disposed = false;
   /** Mapa cujos arquivos ainda estão baixando antes da troca. */
   private waitingMap: string | null = null;
+  private cameraHintShown = false;
   private readonly unsubscribers: (() => void)[] = [];
   private settings: GameSettings = settingsStore.get();
 
@@ -282,6 +283,10 @@ export class Game {
       if (this.localAvatar.setDisguise(this.me.disguise)) {
         this.world?.controller.setDisguise(this.me.disguise);
         if (this.me.disguise) this.effects.transform(this.localAvatar.root.position, 1, this.me.effect);
+        if (this.me.disguise && this.settings.cameraMode === 'first' && !this.cameraHintShown) {
+          this.cameraHintShown = true;
+          hudStore.toast(`Aperte ${keyLabel(this.settings.keys.camera)} para se ver em 3ª pessoa`);
+        }
       }
       this.localAvatar.root.visible = this.me.alive;
     }
@@ -541,6 +546,11 @@ export class Game {
     this.cameraRig.rotate(mouse.dx, mouse.dy, this.settings.mouseSensitivity, this.settings.invertY);
     const actions = this.input.consumeActions();
     const serverNow = this.network.serverNow();
+    if (actions.includes('camera')) {
+      const cameraMode = this.settings.cameraMode === 'first' ? 'third' : 'first';
+      settingsStore.set({ cameraMode });
+      hudStore.toast(cameraMode === 'first' ? 'Câmera em 1ª pessoa' : 'Câmera em 3ª pessoa');
+    }
 
     const alive = Boolean(me?.alive);
     const frozen = room.state === 'HIDING' && me?.team === 'HUNTERS';
@@ -552,10 +562,16 @@ export class Game {
       world.controller.update(dt, axes, this.cameraRig.yaw, me?.team ?? null, frozen, dash);
       const p = world.controller.position;
       this.localAvatar.root.position.set(p.x, p.y, p.z);
-      this.localAvatar.root.rotation.y = lerpAngle(this.localAvatar.root.rotation.y, world.controller.facing, Math.min(1, dt * 12));
+      // 1ª pessoa: o corpo vira para onde o jogador olha (os outros veem isso).
+      const firstPerson = this.settings.cameraMode === 'first' && !this.localAvatar.emoting;
+      const facing = firstPerson ? this.cameraRig.yaw + Math.PI : world.controller.facing;
+      this.localAvatar.root.rotation.y = lerpAngle(this.localAvatar.root.rotation.y, facing, Math.min(1, dt * (firstPerson ? 30 : 12)));
+      if (firstPerson) world.controller.facing = facing;
       this.localAvatar.update(dt, world.controller.horizontalSpeed, world.controller.grounded);
       this.sendMove(serverNow, frozen);
+      this.cameraRig.firstPerson = firstPerson;
       this.cameraRig.update(p, world.controller.height, dt, world.physics.world, world.controller.colliderHandle);
+      this.setOwnBodyHidden(firstPerson);
       this.spectateId = null;
       // Camuflagem: o próprio jogador se vê translúcido enquanto estiver ativa.
       const camouflaged = (abilities.camouflage?.activeUntil ?? 0) > serverNow;
@@ -656,7 +672,16 @@ export class Game {
     });
   }
 
+  /** Em 1ª pessoa o próprio corpo sai da câmera (camada 1), mas a sombra continua. */
+  private setOwnBodyHidden(hidden: boolean): void {
+    this.localAvatar.root.traverse((child) => {
+      if (hidden) child.layers.set(1);
+      else child.layers.set(0);
+    });
+  }
+
   private updateSpectator(dt: number, actions: ActionKey[]): void {
+    this.cameraRig.firstPerson = false;
     const ids = [...this.remotes.positions.keys()];
     if (ids.length === 0) {
       this.cameraRig.update({ x: 0, y: 0, z: 0 }, 6, dt, null);

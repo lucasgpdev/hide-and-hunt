@@ -109,6 +109,9 @@ export function TouchControls({ game, team }: { game: Game; team: Team | null })
         <button type="button" className="touch-btn" onPointerDown={tap('emote')}>
           Emote
         </button>
+        <button type="button" className="touch-btn" onPointerDown={tap('camera')}>
+          Câmera
+        </button>
       </div>
       <button type="button" className="touch-menu" onPointerDown={() => hudStore.set({ pointerLocked: false })}>
         ☰

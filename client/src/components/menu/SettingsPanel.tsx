@@ -91,6 +91,13 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
       {tab === 'graphics' && (
         <div className="settings-form">
           <label className="field">
+            <span>Câmera</span>
+            <select value={settings.cameraMode} onChange={(e) => set({ cameraMode: e.target.value as GameSettings['cameraMode'] })}>
+              <option value="first">1ª pessoa (olhos do personagem)</option>
+              <option value="third">3ª pessoa (atrás do personagem)</option>
+            </select>
+          </label>
+          <label className="field">
             <span>Qualidade gráfica</span>
             <select value={settings.graphics} onChange={(e) => set({ graphics: e.target.value as GameSettings['graphics'] })}>
               <option value="low">Baixa (mais FPS)</option>

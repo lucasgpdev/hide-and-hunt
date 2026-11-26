@@ -95,6 +95,10 @@ export class PlayerAvatar {
     this.nameplate.visible = visible;
   }
 
+  get emoting(): boolean {
+    return Boolean(this.animated?.emoting);
+  }
+
   playEmote(name: string): boolean {
     return !this.disguise && Boolean(this.animated?.playEmote(name));
   }

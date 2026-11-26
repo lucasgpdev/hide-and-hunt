@@ -19,6 +19,7 @@ export type ActionKey =
   | 'ability2'
   | 'ability3'
   | 'ability4'
+  | 'camera'
   | 'digit5'
   | 'digit6';
 
@@ -161,6 +162,7 @@ export class Input {
       ['ability2', 'ability2'],
       ['ability3', 'ability3'],
       ['ability4', 'ability4'],
+      ['camera', 'camera'],
     ];
     for (const [setting, action] of map) if (event.code === keys[setting]) this.pressed.push(action);
     if (event.code === 'KeyQ') this.pressed.push('previousTarget');
