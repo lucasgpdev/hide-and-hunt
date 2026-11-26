@@ -328,6 +328,60 @@ for (const p of propOutputs) for (const pl of p.placements) {
   const r = Math.max(p.size[0], p.size[2]) / 2 + 0.05;
   for (let gz = Math.floor((pl.z - r - bz0) / RES); gz <= Math.floor((pl.z + r - bz0) / RES); gz++) for (let gx = Math.floor((pl.x - r - bx0) / RES); gx <= Math.floor((pl.x + r - bx0) / RES); gx++) if (gx >= 0 && gz >= 0 && gx < GX && gz < GZ) blocked[gz * GX + gx] = 1;
 }
+// Objetos extras automáticos: encostados em paredes/móveis, em pontos livres, espalhados.
+const autoPlaced = [];
+{
+  const nearest = (gx, gz, maxR) => {
+    // distância (em células) até a célula bloqueada mais próxima, e a direção dela
+    let best = null;
+    for (let j = -maxR; j <= maxR; j++) for (let i = -maxR; i <= maxR; i++) {
+      const x = gx + i, z = gz + j;
+      if (x < 0 || z < 0 || x >= GX || z >= GZ) { const d = Math.hypot(i, j); if (!best || d < best.d) best = { d, i, j }; continue; }
+      if (!blocked[z * GX + x]) continue;
+      const d = Math.hypot(i, j);
+      if (!best || d < best.d) best = { d, i, j };
+    }
+    return best;
+  };
+  // região interna: alcançável a partir do centro sem atravessar nada
+  const inside = new Uint8Array(GX * GZ);
+  {
+    let start = -1, bd = Infinity;
+    for (let k = 0; k < GX * GZ; k++) if (!blocked[k]) { const d = Math.hypot(k % GX - GX / 2, Math.floor(k / GX) - GZ / 2); if (d < bd) { bd = d; start = k; } }
+    const st = start >= 0 ? [start] : [];
+    if (start >= 0) inside[start] = 1;
+    while (st.length) { const c = st.pop(); const x = c % GX, z = Math.floor(c / GX); for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = x + dx, nz = z + dz; if (nx < 0 || nz < 0 || nx >= GX || nz >= GZ) continue; const nk = nz * GX + nx; if (!blocked[nk] && !inside[nk]) { inside[nk] = 1; st.push(nk); } } }
+  }
+  let seed = 7;
+  const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  for (const ex of cfg.autoExtras ?? []) {
+    for (let n = 0; n < (ex.count ?? 1); n++) {
+      const r = Math.hypot(ex.size[0], ex.size[2]) / 2 + 0.03;
+      const rc = Math.ceil(r / RES);
+      const cands = [];
+      for (let gz = rc; gz < GZ - rc; gz += 1) for (let gx = rc; gx < GX - rc; gx += 1) {
+        if (blocked[gz * GX + gx] || !inside[gz * GX + gx]) continue;
+        const nb = nearest(gx, gz, rc + 3);
+        if (!nb || nb.d * RES < r || nb.d * RES > r + 0.25) continue;
+        cands.push([gx, gz, nb]);
+      }
+      if (!cands.length) { console.log('autoExtra sem lugar', ex.type); continue; }
+      // longe dos outros extras e dos objetos já colocados
+      let pick = null, bd = -1;
+      for (let t = 0; t < 400; t++) {
+        const c = cands[Math.floor(rand() * cands.length)];
+        const x = bx0 + (c[0] + 0.5) * RES, z = bz0 + (c[1] + 0.5) * RES;
+        const d = Math.min(9, ...autoPlaced.map((a) => Math.hypot(a.x - x, a.z - z)));
+        if (d > bd) { bd = d; pick = { c, x, z }; }
+      }
+      const { c, x, z } = pick;
+      const yaw = Math.atan2(-c[2].i, -c[2].j); // de costas para a parede/móvel mais próximo
+      autoPlaced.push({ type: ex.type, x: +x.toFixed(3), z: +z.toFixed(3), yaw: +yaw.toFixed(3), y: 0, size: ex.size });
+      for (let j = -rc; j <= rc; j++) for (let i = -rc; i <= rc; i++) if (i * i + j * j <= (rc + 0.5) ** 2) { const k = (c[1] + j) * GX + c[0] + i; if (k >= 0 && k < GX * GZ) blocked[k] = 1; }
+    }
+  }
+  console.log('extras automáticos', autoPlaced.map((a) => a.type).join(' '));
+}
 const free = new Uint8Array(GX * GZ);
 for (let gz = R; gz < GZ - R; gz++) for (let gx = R; gx < GX - R; gx++) {
   let ok = true;
@@ -378,7 +432,7 @@ fs.writeFileSync(`${OUT}/map.json`, JSON.stringify({
   props: propOutputs.map(({ id, name, size, placements, speed }) => ({ id, name, size, speed, placements })),
   spawns: spawns.map((s) => s.map((v) => +v.toFixed(2))),
   lights: lights.slice(0, 10),
-  extras: (cfg.extras ?? []).map((e) => [e.type, e.x, e.z, e.yaw ?? 0, e.y ?? 0]),
+  extras: [...(cfg.extras ?? []), ...autoPlaced].map((e) => [e.type, e.x, e.z, e.yaw ?? 0, e.y ?? 0]),
 }, null, 0));
 // prévia da grade (PGM) para conferência
 const pgm = Buffer.alloc(GX * GZ);

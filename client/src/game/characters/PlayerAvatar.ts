@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { getSkin, type Team } from '@hh/shared';
 import { material } from '../objects/primitives';
 import { createPropModel } from '../objects/propModels';
+import { buildBoundsTrees } from '../physics/fastRaycast';
 import { AnimatedCharacter } from './AnimatedCharacter';
 import { CharacterModel } from './CharacterModel';
 
@@ -10,6 +11,12 @@ import { CharacterModel } from './CharacterModel';
  * que ele está transformado) e etiqueta de nome opcional.
  */
 export class PlayerAvatar {
+  /** Recebe cada passo de qualquer personagem (posição no mundo, velocidade, id). Definido pelo jogo para tocar o som. */
+  static stepHandler: ((position: THREE.Vector3, speed: number, playerId: string) => void) | null = null;
+  private readonly stepPos = new THREE.Vector3();
+  /** Caixa invisível usada na mira (testar o boneco animado triângulo a triângulo é caro). */
+  readonly hitbox = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.8, 0.7), new THREE.MeshBasicMaterial({ visible: false }));
+
   readonly root = new THREE.Group();
   private animated: AnimatedCharacter | null = null;
   private simple: CharacterModel | null = null;
@@ -35,6 +42,9 @@ export class PlayerAvatar {
     this.skin = skin;
     this.nickname = nickname;
     this.root.add(this.body);
+    this.hitbox.position.y = 0.9;
+    this.hitbox.userData.playerId = playerId;
+    this.root.add(this.hitbox);
     this.nameTexture = makeNameTexture(nickname, team);
     this.nameplate = new THREE.Sprite(new THREE.SpriteMaterial({ map: this.nameTexture, depthTest: false, transparent: true }));
     this.nameplate.scale.set(1.6, 0.4, 1);
@@ -70,10 +80,12 @@ export class PlayerAvatar {
     }
     if (disguise) {
       this.prop = createPropModel(disguise);
+      buildBoundsTrees(this.prop);
       this.tag(this.prop);
       this.root.add(this.prop);
     }
     this.body.visible = !disguise;
+    this.hitbox.visible = !disguise;
     this.nameplate.position.y = disguise ? 1.3 : 2.15;
     this.morph = 1;
     return true;
@@ -120,6 +132,11 @@ export class PlayerAvatar {
     this.animated = AnimatedCharacter.create(modelId, this.skin, this.team, hashSeed(this.playerId)) ?? null;
     if (this.animated) {
       this.body.add(this.animated.root);
+      this.animated.onStep = (speed) => {
+        if (!this.root.visible) return;
+        this.root.getWorldPosition(this.stepPos);
+        PlayerAvatar.stepHandler?.(this.stepPos, speed, this.playerId);
+      };
     } else {
       this.simple = new CharacterModel(this.skin, this.team);
       this.body.add(this.simple.root);

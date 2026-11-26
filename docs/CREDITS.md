@@ -51,6 +51,25 @@ Versões glTF do repositório [gltf-research-scenes](https://github.com/ErfanMo7
 
 Mudanças feitas aqui (com as ferramentas de `tools/scene-maps`): objetos repetidos (carteiras, cadeiras, poltronas, abajur, almofadas, plantas, lixeira) separados como objetos transformáveis; colisão gerada a partir da geometria; luzes embutidas removidas; texturas reduzidas (WebP) e geometria simplificada e comprimida (meshopt); a Sala de Café da Manhã foi reduzida para a escala real. Os mapas antigos, feitos por código, continuam no projeto, mas fora da rotação.
 
+## Objetos e céus do Poly Haven (CC0) — `client/public/models/props/ph_*.glb`, `client/public/sky/*.jpg`
+
+Modelos de [Poly Haven](https://polyhaven.com) (licença **CC0**), reduzidos para texturas WebP de até 1024 px e geometria meshopt: Ottoman 01, Arm Chair 01, Potted Plant 02, Wicker Basket 01, Wooden Stool 01, Side Table 01, Ceramic Vase 01, Television 01, Book Encyclopedia Set 01, Boombox, Throw Pillows 01, Wooden Crate 01, Vintage Grandfather Clock 01, Lantern 01, Drawer Cabinet, Plastic Monobloc Chair 01 e Rubber Duck Toy. Céus vistos pelas janelas: HDRIs *Noon Grass* e *Kloofendal 48d Partly Cloudy (Pure Sky)*, convertidos para panoramas JPG.
+
+## Sons (CC0) — `client/public/sounds/*.mp3`
+
+Pacotes da [Kenney](https://kenney.nl) (licença **CC0**): *Impact Sounds* (passos em madeira, carpete e piso frio; impactos), *RPG Audio* (portas, tecido, rangidos, trinco) e *Interface Sounds* (cliques e interruptor). Convertidos para MP3 mono.
+
+## Bibliotecas
+
+- [N8AO](https://github.com/N8python/n8ao) (ISC): oclusão de ambiente.
+- [nipplejs](https://github.com/yoannmoinet/nipplejs) (MIT): joystick na tela do celular.
+- [three-mesh-bvh](https://github.com/gkjohnson/three-mesh-bvh) (MIT): raios de mira acelerados.
+- [postprocessing](https://github.com/pmndrs/postprocessing) (Zlib): dependência do N8AO.
+
+## Animações extras
+
+Da mesma *Universal Animation Library* (Quaternius, CC0): caminhada agachada, sentar, socos, pegar objeto, feitiço e empurrar.
+
 ## Iluminação de ambiente (HDRI)
 
 Arquivos `lobby`, `lab`, `hall`, `apartment`, `studio` e `night` do pacote [`@pmndrs/assets`](https://github.com/pmndrs/assets) — seleção de HDRIs do [Poly Haven](https://polyhaven.com/hdris) reduzidos para 512×512. Licença **CC0 1.0**.

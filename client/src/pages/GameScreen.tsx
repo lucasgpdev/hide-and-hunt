@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { playSound, startAmbientMusic, stopAmbientMusic } from '../audio/sound';
 import { Hud } from '../components/game/Hud';
+import { isTouchDevice, TouchControls } from '../components/game/TouchControls';
 import { LobbyPanel } from '../components/game/LobbyPanel';
 import { ResultsPanel } from '../components/game/ResultsPanel';
 import { ReplayViewer } from '../components/game/ReplayViewer';
@@ -114,6 +115,11 @@ export function GameScreen() {
     };
   }, [settings.voiceEnabled, gameReady, localId]);
 
+  // Celular/tablet: modo de toque assim que o jogo carrega (não há trava de cursor).
+  useEffect(() => {
+    if (gameReady && isTouchDevice()) gameRef.current?.enableTouchControls();
+  }, [gameReady]);
+
   useEffect(() => {
     if (!notice) return;
     const timer = setTimeout(() => setNotice(null), 5000);
@@ -140,6 +146,7 @@ export function GameScreen() {
   }, [scoreboardKey]);
 
   if (!room) return null;
+  const touch = isTouchDevice();
   const paused = !hud.pointerLocked && !settingsOpen && !playersOpen && !replay;
   const lobbyVisible = room.state === 'WAITING' || room.state === 'COUNTDOWN' || room.state === 'FINISHED';
   const showResults = room.state === 'FINISHED' && net.results;
@@ -171,6 +178,9 @@ export function GameScreen() {
       )}
 
       {!hud.loading && <Hud room={room} localId={localId} feed={net.feed} latencyMs={net.latencyMs} />}
+      {!hud.loading && gameReady && touch && gameRef.current && hud.pointerLocked && !settingsOpen && !replay && (
+        <TouchControls game={gameRef.current} team={room.players.find((p) => p.id === localId)?.team ?? null} />
+      )}
 
       {lobbyVisible && !hud.pointerLocked && <LobbyPanel room={room} localId={localId} />}
       {showResults && !hud.pointerLocked && !replay && (
@@ -184,7 +194,7 @@ export function GameScreen() {
           <p className="pause-title">{room.state === 'WAITING' ? 'Sala de espera' : 'Pausado'}</p>
           <p className="muted tiny">O jogo continua para os outros jogadores.</p>
           <button type="button" className="button-primary" onClick={() => gameRef.current?.requestPointerLock()}>
-            Clique para jogar
+            {isTouchDevice() ? 'Toque para jogar' : 'Clique para jogar'}
           </button>
           <button type="button" className="button-secondary" onClick={() => setPlayersOpen(true)}>
             Jogadores (silenciar / denunciar)

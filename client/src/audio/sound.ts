@@ -1,8 +1,9 @@
 import { settingsStore } from '../settings/settings';
 
 /**
- * Áudio sintetizado com Web Audio (sem arquivos externos).
- * Efeitos curtos para eventos do jogo e uma trilha ambiente discreta.
+ * Áudio com Web Audio: amostras gravadas (pacotes CC0 da Kenney, em
+ * client/public/sounds) para passos, portas, cliques e impactos, e sons
+ * sintetizados para o resto — e como reserva enquanto as amostras carregam.
  */
 export type SoundName =
   | 'click'
@@ -52,6 +53,130 @@ function applyVolumes(): void {
 /** Destino do som: saída geral ou um "panner" 3D posicionado no mundo. */
 let routeTo: AudioNode | null = null;
 
+// ---------- amostras gravadas ----------
+/** Grupos de amostras e quantas variações cada um tem (arquivo: /sounds/<grupo>_<n>.mp3). */
+const SAMPLES = {
+  step_wood: 5,
+  step_carpet: 5,
+  step_tile: 5,
+  punch: 3,
+  soft: 3,
+  wood: 3,
+  door_open: 2,
+  door_close: 2,
+  cloth: 4,
+  creak: 3,
+  latch: 1,
+  book: 1,
+  ui_click: 3,
+  ui_switch: 3,
+  ui_confirm: 1,
+  ui_error: 1,
+  ui_select: 1,
+  ui_drop: 1,
+} as const;
+export type SampleGroup = keyof typeof SAMPLES;
+const buffers = new Map<string, AudioBuffer>();
+let samplesLoading = false;
+
+/** Baixa e decodifica as amostras em segundo plano (chamado na primeira interação). */
+export function preloadSamples(): void {
+  const audio = context();
+  if (!audio || samplesLoading) return;
+  samplesLoading = true;
+  for (const [group, count] of Object.entries(SAMPLES)) {
+    for (let i = 0; i < count; i++) {
+      const key = `${group}_${i}`;
+      void fetch(`/sounds/${key}.mp3`)
+        .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(String(r.status)))))
+        .then((data) => audio.decodeAudioData(data))
+        .then((buffer) => buffers.set(key, buffer))
+        .catch(() => undefined);
+    }
+  }
+}
+
+/** Toca uma variação aleatória do grupo; false se ainda não carregou (aí vale o som sintetizado). */
+function sample(group: SampleGroup, volume = 0.5, pitchJitter = 0.08, delay = 0): boolean {
+  const audio = context();
+  if (!audio || !effectsGain) return false;
+  const options = [...Array(SAMPLES[group]).keys()].map((i) => buffers.get(`${group}_${i}`)).filter((b): b is AudioBuffer => !!b);
+  if (!options.length) return false;
+  const source = audio.createBufferSource();
+  source.buffer = options[Math.floor(Math.random() * options.length)]!;
+  source.playbackRate.value = 1 + (Math.random() * 2 - 1) * pitchJitter;
+  const gain = audio.createGain();
+  gain.gain.value = volume;
+  source.connect(gain).connect(routeTo ?? effectsGain);
+  source.start(audio.currentTime + delay);
+  return true;
+}
+
+/** Piso → som de passo. */
+export type StepSurface = 'wood' | 'carpet' | 'tile';
+
+/**
+ * Passo de um personagem num ponto do mapa (com posição 3D: dá para ouvir de
+ * que lado alguém está andando). Mais forte ao correr.
+ */
+export function playFootstep(surface: StepSurface, position: [number, number, number], speed: number, local: boolean): void {
+  const audio = context();
+  if (!audio || !effectsGain) return;
+  const volume = THREE_CLAMP(0.12 + speed * 0.05, 0.12, 0.5) * (local ? 0.55 : 1);
+  if (local) {
+    sample(`step_${surface}`, volume, 0.1);
+    return;
+  }
+  const panner = positional(position, 1.5, 22);
+  routeTo = panner;
+  sample(`step_${surface}`, volume, 0.1);
+  routeTo = null;
+  setTimeout(() => panner.disconnect(), 1500);
+}
+
+function THREE_CLAMP(v: number, a: number, b: number): number {
+  return Math.min(b, Math.max(a, v));
+}
+
+function positional(position: [number, number, number], ref = 2, max = 40): PannerNode {
+  const audio = ctx!;
+  const panner = audio.createPanner();
+  panner.panningModel = 'HRTF';
+  panner.distanceModel = 'inverse';
+  panner.refDistance = ref;
+  panner.maxDistance = max;
+  panner.rolloffFactor = 1.3;
+  panner.positionX.value = position[0];
+  panner.positionY.value = position[1];
+  panner.positionZ.value = position[2];
+  panner.connect(effectsGain!);
+  return panner;
+}
+
+let creakTimer: ReturnType<typeof setTimeout> | null = null;
+/** Ambiente: rangidos de madeira esporádicos, baixos, vindos de lados aleatórios. */
+export function setAmbience(active: boolean, around?: () => [number, number, number]): void {
+  if (creakTimer) clearTimeout(creakTimer);
+  creakTimer = null;
+  if (!active) return;
+  const next = () => {
+    creakTimer = setTimeout(() => {
+      const audio = context();
+      if (audio && effectsGain && around) {
+        const [x, y, z] = around();
+        const angle = Math.random() * Math.PI * 2;
+        const panner = positional([x + Math.cos(angle) * 4, y + 1.5, z + Math.sin(angle) * 4], 2, 20);
+        routeTo = panner;
+        sample('creak', 0.12 + Math.random() * 0.1, 0.15);
+        routeTo = null;
+        setTimeout(() => panner.disconnect(), 4000);
+      }
+      next();
+    }, 9000 + Math.random() * 16000);
+  };
+  next();
+}
+
 function tone(
   freq: number,
   duration: number,
@@ -95,17 +220,20 @@ function noise(duration: number, volume = 0.25, filterFreq = 1200, type: BiquadF
 export function playSound(name: SoundName): void {
   switch (name) {
     case 'click':
-      tone(660, 0.06, { type: 'triangle', volume: 0.15 });
+      if (!sample('ui_click', 0.35, 0.03)) tone(660, 0.06, { type: 'triangle', volume: 0.15 });
       break;
     case 'transform':
+      sample('cloth', 0.6, 0.1);
       noise(0.35, 0.35, 900);
       tone(300, 0.25, { slideTo: 900, type: 'sine', volume: 0.2 });
       break;
     case 'capture':
+      sample('punch', 0.7, 0.06);
       tone(880, 0.12, { type: 'square', volume: 0.15 });
       tone(1320, 0.25, { type: 'square', delay: 0.1, volume: 0.15 });
       break;
     case 'miss':
+      if (sample('soft', 0.5, 0.1)) break;
       tone(220, 0.2, { type: 'sawtooth', slideTo: 140, volume: 0.15 });
       break;
     case 'tick':
@@ -122,6 +250,7 @@ export function playSound(name: SoundName): void {
       [392, 330, 262].forEach((f, i) => tone(f, 0.35, { type: 'triangle', delay: i * 0.16 }));
       break;
     case 'error':
+      if (sample('ui_error', 0.4, 0)) break;
       tone(180, 0.15, { type: 'square', volume: 0.12 });
       break;
     case 'whistle':
@@ -129,13 +258,16 @@ export function playSound(name: SoundName): void {
       tone(2400, 0.3, { type: 'sine', delay: 0.2, slideTo: 1500, volume: 0.35 });
       break;
     case 'door':
+      if (sample(Math.random() < 0.5 ? 'door_open' : 'door_close', 0.55, 0.05)) break;
       noise(0.35, 0.3, 300, 'lowpass');
       tone(110, 0.2, { type: 'triangle', volume: 0.2 });
       break;
     case 'switch':
+      if (sample('ui_switch', 0.5, 0.05)) break;
       noise(0.04, 0.4, 3000, 'highpass');
       break;
     case 'impact':
+      if (sample('wood', 0.6, 0.1)) break;
       noise(0.18, 0.45, 250, 'lowpass');
       tone(90, 0.12, { type: 'sine', volume: 0.3 });
       break;
@@ -150,6 +282,7 @@ export function playSound(name: SoundName): void {
       tone(990, 0.15, { type: 'triangle', delay: 0.08, volume: 0.15 });
       break;
     case 'pop':
+      if (sample('ui_drop', 0.35, 0.05)) break;
       tone(500, 0.08, { type: 'sine', slideTo: 900, volume: 0.2 });
       break;
   }

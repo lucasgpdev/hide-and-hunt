@@ -110,5 +110,43 @@
     0.6
    ]
   }
+ ],
+ "autoExtras": [
+  {
+   "type": "wooden_stool",
+   "count": 2,
+   "size": [
+    0.38,
+    0.44,
+    0.4
+   ]
+  },
+  {
+   "type": "wicker_basket",
+   "count": 1,
+   "size": [
+    0.34,
+    0.12,
+    0.27
+   ]
+  },
+  {
+   "type": "ceramic_vase",
+   "count": 1,
+   "size": [
+    0.2,
+    0.4,
+    0.2
+   ]
+  },
+  {
+   "type": "wooden_crate",
+   "count": 1,
+   "size": [
+    0.75,
+    0.35,
+    0.38
+   ]
+  }
  ]
 }

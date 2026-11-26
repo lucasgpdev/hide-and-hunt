@@ -43,5 +43,25 @@
     0.6
    ]
   }
+ ],
+ "autoExtras": [
+  {
+   "type": "ceramic_vase",
+   "count": 1,
+   "size": [
+    0.2,
+    0.4,
+    0.2
+   ]
+  },
+  {
+   "type": "wooden_stool",
+   "count": 1,
+   "size": [
+    0.38,
+    0.44,
+    0.4
+   ]
+  }
  ]
 }

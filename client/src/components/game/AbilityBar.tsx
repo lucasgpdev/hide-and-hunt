@@ -30,7 +30,17 @@ export function AbilityBar({ team, abilities, enabled }: Props) {
         const active = state ? state.activeUntil > now : false;
         const empty = !state || state.usesLeft <= 0;
         return (
-          <div key={def.id} className={`ability ${active ? 'ability--active' : ''} ${empty ? 'ability--empty' : ''}`} title={def.description}>
+          <div
+            key={def.id}
+            className={`ability ${active ? 'ability--active' : ''} ${empty ? 'ability--empty' : ''}`}
+            title={def.description}
+            onPointerDown={(e) => {
+              // No celular, tocar na habilidade usa a habilidade (mesmo efeito da tecla).
+              if (e.pointerType === 'mouse') return;
+              e.preventDefault();
+              window.dispatchEvent(new CustomEvent('hh:action', { detail: `ability${index + 1}` }));
+            }}
+          >
             <div className="ability-cooldown" style={{ height: `${fraction * 100}%` }} />
             <span className="ability-key">{keyLabel(keys[index] ?? '')}</span>
             <span className="ability-name">{def.name}</span>

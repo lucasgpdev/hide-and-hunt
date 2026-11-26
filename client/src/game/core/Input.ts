@@ -29,6 +29,12 @@ export class Input {
   private mouseY = 0;
   /** Habilitado só quando o jogo está em primeiro plano (sem menus abertos). */
   enabled = true;
+  /** Modo de toque (celular/tablet): sem travar o cursor; joystick e botões na tela. */
+  touchMode = false;
+  private touchX = 0;
+  private touchY = 0;
+  private touchRun = false;
+  private touchJump = false;
   onPointerLockChange: (locked: boolean) => void = () => {};
 
   constructor(private readonly element: HTMLElement) {
@@ -38,7 +44,14 @@ export class Input {
     document.addEventListener('mousemove', this.handleMouseMove);
     document.addEventListener('pointerlockchange', this.handleLockChange);
     element.addEventListener('mousedown', this.handleMouseDown);
+    window.addEventListener('hh:action', this.handleUiAction);
   }
+
+  /** Botões da interface (ex.: tocar numa habilidade no celular) disparam a mesma ação da tecla. */
+  private readonly handleUiAction = (event: Event) => {
+    const action = (event as CustomEvent<ActionKey>).detail;
+    if (action) this.press(action);
+  };
 
   dispose(): void {
     window.removeEventListener('keydown', this.handleKeyDown);
@@ -47,14 +60,43 @@ export class Input {
     document.removeEventListener('mousemove', this.handleMouseMove);
     document.removeEventListener('pointerlockchange', this.handleLockChange);
     this.element.removeEventListener('mousedown', this.handleMouseDown);
+    window.removeEventListener('hh:action', this.handleUiAction);
     if (this.locked) document.exitPointerLock();
   }
 
   get locked(): boolean {
-    return document.pointerLockElement === this.element;
+    return this.touchMode || document.pointerLockElement === this.element;
+  }
+
+  // ---------- controles de toque ----------
+  /** Joystick analógico: x = direita, y = frente (−1..1). */
+  setTouchMove(x: number, y: number): void {
+    this.touchX = Math.max(-1, Math.min(1, x));
+    this.touchY = Math.max(-1, Math.min(1, y));
+  }
+
+  setTouchRun(run: boolean): void {
+    this.touchRun = run;
+  }
+
+  setTouchJump(jump: boolean): void {
+    this.touchJump = jump;
+  }
+
+  /** Arrastar o dedo gira a câmera (mesma escala do mouse). */
+  addLook(dx: number, dy: number): void {
+    if (!this.enabled) return;
+    this.mouseX += dx;
+    this.mouseY += dy;
+  }
+
+  /** Botão de ação na tela. */
+  press(action: ActionKey): void {
+    if (this.enabled) this.pressed.push(action);
   }
 
   requestLock(): void {
+    if (this.touchMode) return;
     if (!this.locked) {
       try {
         const result = this.element.requestPointerLock() as unknown;
@@ -78,11 +120,14 @@ export class Input {
   }
 
   axes(): { forward: number; right: number; run: boolean; jump: boolean } {
+    const keyForward = (this.bound('forward') || this.isDown('ArrowUp') ? 1 : 0) - (this.bound('back') || this.isDown('ArrowDown') ? 1 : 0);
+    const keyRight = (this.bound('right') || this.isDown('ArrowRight') ? 1 : 0) - (this.bound('left') || this.isDown('ArrowLeft') ? 1 : 0);
+    const touch = this.enabled && this.touchMode;
     return {
-      forward: (this.bound('forward') || this.isDown('ArrowUp') ? 1 : 0) - (this.bound('back') || this.isDown('ArrowDown') ? 1 : 0),
-      right: (this.bound('right') || this.isDown('ArrowRight') ? 1 : 0) - (this.bound('left') || this.isDown('ArrowLeft') ? 1 : 0),
-      run: this.bound('run') || this.isDown('ShiftRight'),
-      jump: this.bound('jump'),
+      forward: Math.max(-1, Math.min(1, keyForward + (touch ? this.touchY : 0))),
+      right: Math.max(-1, Math.min(1, keyRight + (touch ? this.touchX : 0))),
+      run: this.bound('run') || this.isDown('ShiftRight') || (touch && this.touchRun),
+      jump: this.bound('jump') || (touch && this.touchJump),
     };
   }
 
@@ -148,6 +193,7 @@ export class Input {
   };
 
   private readonly handleLockChange = () => {
+    if (this.touchMode) return;
     this.onPointerLockChange(this.locked);
   };
 }

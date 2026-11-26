@@ -68,6 +68,23 @@ export const PROP_TYPES = [
   prop('electronic_equipment', 'Equipamento eletrônico', 'eletronicos', [0.5, 0.35, 0.4]),
   prop('nobreak', 'Nobreak', 'eletronicos', [0.18, 0.3, 0.38], 1.05),
   prop('water_cooler', 'Bebedouro', 'utilidades', [0.4, 1.1, 0.4], 0.9),
+  // Objetos realistas do Poly Haven (CC0).
+  prop('ottoman', 'Pufe', 'moveis', [0.8, 0.62, 0.56], 0.9),
+  prop('armchair', 'Poltrona', 'moveis', [0.76, 1.06, 0.69], 0.85),
+  prop('wicker_basket', 'Cesto de vime', 'decoracao', [0.34, 0.12, 0.27], 1.15),
+  prop('wooden_stool', 'Banquinho', 'moveis', [0.38, 0.44, 0.4], 1.05),
+  prop('side_table', 'Mesinha lateral', 'moveis', [0.5, 0.55, 0.41], 1),
+  prop('ceramic_vase', 'Vaso de cerâmica', 'decoracao', [0.2, 0.4, 0.2], 1.15),
+  prop('old_tv', 'TV antiga', 'eletronicos', [0.56, 0.46, 0.44], 1),
+  prop('book_stack', 'Enciclopédias', 'decoracao', [0.5, 0.24, 0.16], 1.15),
+  prop('boombox', 'Rádio', 'eletronicos', [0.66, 0.47, 0.18], 1.05),
+  prop('throw_pillows', 'Almofadas', 'decoracao', [0.85, 0.45, 0.42], 1.05),
+  prop('wooden_crate', 'Caixote de madeira', 'utilidades', [0.75, 0.35, 0.38], 1),
+  prop('grandfather_clock', 'Relógio de pêndulo', 'decoracao', [0.58, 2.19, 0.4], 0.75),
+  prop('lantern', 'Lampião', 'decoracao', [0.12, 0.29, 0.1], 1.2),
+  prop('drawer_cabinet', 'Gaveteiro', 'moveis', [1.05, 1.88, 0.45], 0.7),
+  prop('plastic_chair', 'Cadeira de plástico', 'moveis', [0.58, 0.88, 0.57], 1),
+  prop('rubber_duck', 'Patinho de borracha', 'decoracao', [0.2, 0.29, 0.27], 1.25),
   // Objetos separados dos cenários 3D (gerados por script).
   ...SCENE_PROPS.map((p) => prop(p.id, p.name, 'moveis', p.size, p.speed)),
 ] as const satisfies readonly PropType[];

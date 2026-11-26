@@ -18,7 +18,7 @@ import {
   type Snapshot,
   type TeleportMessage,
 } from '@hh/shared';
-import { playSound, playSoundAt, setAlarm, setListener, setRain } from '../../audio/sound';
+import { playFootstep, playSound, playSoundAt, preloadSamples, setAlarm, setAmbience, setListener, setRain, type StepSurface } from '../../audio/sound';
 import type { NetworkClient } from '../../multiplayer/NetworkClient';
 import { settingsStore, type GameSettings } from '../../settings/settings';
 import { ThirdPersonCamera } from '../camera/ThirdPersonCamera';
@@ -26,6 +26,7 @@ import { PlayerAvatar } from '../characters/PlayerAvatar';
 import { RemotePlayers } from '../characters/RemotePlayers';
 import { Effects } from '../effects/Effects';
 import { MapView } from '../maps/MapView';
+import { installFastRaycast } from '../physics/fastRaycast';
 import { setMaxAnisotropy } from '../materials/textures';
 import { createPropModel } from '../objects/propModels';
 import { LocalController } from '../physics/LocalController';
@@ -132,6 +133,19 @@ export class Game {
     this.remotes = new RemotePlayers(localId);
     this.scene.add(this.remotes.root);
 
+    installFastRaycast();
+    // Sons gravados (passos, portas...) e passos com posição 3D, conforme o piso.
+    preloadSamples();
+    PlayerAvatar.stepHandler = (position, speed, playerId) => {
+      const map = this.world?.view.map;
+      if (!map) return;
+      const zone = map.zones.find(({ rect: [x0, z0, x1, z1] }) => position.x >= x0 && position.x <= x1 && position.z >= z0 && position.z <= z1);
+      const floor = zone?.surface ?? 'tiles';
+      const surface: StepSurface = floor === 'wood' ? 'wood' : floor === 'carpet' ? 'carpet' : 'tile';
+      playFootstep(surface, [position.x, position.y, position.z], speed, playerId === localId);
+    };
+    setAmbience(true, () => [this.camera.position.x, this.camera.position.y, this.camera.position.z]);
+
     this.localAvatar = new PlayerAvatar(localId, '', 'default', null);
     this.localAvatar.setNameVisible(false);
     this.scene.add(this.localAvatar.root);
@@ -162,6 +176,8 @@ export class Game {
     for (const unsubscribe of this.unsubscribers) unsubscribe();
     setAlarm(false);
     setRain(false);
+    setAmbience(false);
+    PlayerAvatar.stepHandler = null;
     this.input.dispose();
     this.postfx.dispose();
     this.effects.dispose();
@@ -178,7 +194,17 @@ export class Game {
   }
 
   requestPointerLock(): void {
-    this.input.requestLock();
+    if (this.input.touchMode) hudStore.set({ pointerLocked: true });
+    else this.input.requestLock();
+  }
+
+  /** Controles de toque: o jogo fica "ativo" sem travar o cursor. */
+  enableTouchControls(): Input {
+    if (!this.input.touchMode) {
+      this.input.touchMode = true;
+      hudStore.set({ pointerLocked: true });
+    }
+    return this.input;
   }
 
   /** Aponta a câmera para um ponto do mundo (usado pelo espectador e por testes). */
@@ -271,6 +297,21 @@ export class Game {
     this.scene.backgroundIntensity = 1;
     this.scene.backgroundBlurriness = 0;
     this.scene.fog = new THREE.Fog(map.theme.fog, this.settings.renderDistance * 0.5, this.settings.renderDistance);
+    // Cenários 3D: panorama do Poly Haven (CC0) visto pelas janelas, sem neblina por cima.
+    if (map.scene?.sky) {
+      const sky = map.scene.sky;
+      new THREE.TextureLoader().load(`/sky/${sky}.jpg`, (texture) => {
+        if (this.world?.mapId !== mapId || this.disposed) {
+          texture.dispose();
+          return;
+        }
+        texture.mapping = THREE.EquirectangularReflectionMapping;
+        texture.colorSpace = THREE.SRGBColorSpace;
+        this.scene.background = texture;
+        this.scene.backgroundIntensity = 1;
+      });
+      this.scene.fog = null;
+    }
     const [envName, envIntensity] = MAP_ENVIRONMENT[mapId] ?? ['lobby', 0.5];
     this.baseEnvIntensity = envIntensity;
     void loadEnvironment(this.renderer, envName)

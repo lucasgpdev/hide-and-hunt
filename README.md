@@ -26,6 +26,10 @@ Jogo multiplayer 3D de Prop Hunt para navegador. Os escondidos se transformam em
 - **Amigos** por código (`Nome#1234`), pedidos, convites para a sala, "entrar junto" e perfil público.
 - **Personagens realistas** (CC0, Quaternius) com proporções de jogo de esconde-esconde e **skins originais** de clima sombrio e divertido: Palhaço da Meia-Noite, Coelho Sinistro, Cabeça de Abóbora, Zelador da Peste, Vigia Noturno e outras.
 - Mapa **Sala de Aula Clássica**: cenário realista CC0 (Classroom, de Christophe Seux) em que dá para virar as próprias carteiras da sala.
+- **Passada realista**: caminhada, trote e corrida sincronizados com a velocidade real (sem o pé deslizar), inclinação nas curvas e ao acelerar, agachada ao aterrissar; novos emotes (sentar, agachar, soco, feitiço).
+- **Som gravado** (CC0, Kenney): passos 3D conforme o piso, portas, cliques, captura e rangidos de ambiente.
+- **Gráficos**: oclusão de ambiente N8AO, 17 objetos realistas do Poly Haven para se esconder e céu de verdade nas janelas.
+- **Celular**: joystick e botões na tela (nipplejs), habilidades por toque.
 - **Sem limite de FPS** por padrão (vai até a taxa do monitor; dá para limitar em Configurações) e rede a 30 atualizações por segundo.
 - **Loja** de visuais com retrato 3D de cada skin e efeitos de transformação (só aparência, sem vantagem).
 - **Moderação**: denúncias no placar, punição por abandono, reputação e painel de administração em `/#admin`.

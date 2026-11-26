@@ -132,7 +132,7 @@ export function buildClassicClassroom(): MapDefinition {
     description: 'Sala de aula antiga e realista, com corredor. Ideal para grupos pequenos.',
     size: [W, D],
     theme: { background: '#c9dbe8', floor: '#6b4f36', wall: '#d6ccb4', ambient: '#ffe7c4', fog: '#c9dbe8' },
-    scene: { url: '/models/maps/classroom.glb', offset: [-OX, 0, -OZ], sunFrom: [9, 6, -2.5], sunIntensity: 2.4 },
+    scene: { url: '/models/maps/classroom.glb', offset: [-OX, 0, -OZ], sunFrom: [9, 6, -2.5], sunIntensity: 2.4, sky: 'noon_grass' },
     spawns: { hiders, hunters },
   });
 }

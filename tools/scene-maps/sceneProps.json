@@ -1,5 +1,41 @@
 [
  {
+  "map": "country_kitchen",
+  "id": "kitchen_chair",
+  "name": "Cadeira de cozinha",
+  "size": [
+   0.446,
+   1.105,
+   0.435
+  ],
+  "speed": 1,
+  "file": "sc_kitchen_chair.glb"
+ },
+ {
+  "map": "grey_room",
+  "id": "potted_plant",
+  "name": "Planta no vaso",
+  "size": [
+   0.524,
+   0.768,
+   0.511
+  ],
+  "speed": 1,
+  "file": "sc_potted_plant.glb"
+ },
+ {
+  "map": "breakfast_room",
+  "id": "eames_chair",
+  "name": "Cadeira de jantar",
+  "size": [
+   0.403,
+   0.853,
+   0.483
+  ],
+  "speed": 1,
+  "file": "sc_eames_chair.glb"
+ },
+ {
   "map": "jp_classroom",
   "id": "jp_desk",
   "name": "Carteira japonesa",
@@ -58,41 +94,5 @@
   ],
   "speed": 1,
   "file": "sc_sofa_cushion.glb"
- },
- {
-  "map": "grey_room",
-  "id": "potted_plant",
-  "name": "Planta no vaso",
-  "size": [
-   0.524,
-   0.768,
-   0.511
-  ],
-  "speed": 1,
-  "file": "sc_potted_plant.glb"
- },
- {
-  "map": "breakfast_room",
-  "id": "eames_chair",
-  "name": "Cadeira de jantar",
-  "size": [
-   0.403,
-   0.853,
-   0.483
-  ],
-  "speed": 1,
-  "file": "sc_eames_chair.glb"
- },
- {
-  "map": "country_kitchen",
-  "id": "kitchen_chair",
-  "name": "Cadeira de cozinha",
-  "size": [
-   0.446,
-   1.105,
-   0.435
-  ],
-  "speed": 1,
-  "file": "sc_kitchen_chair.glb"
  }
 ]

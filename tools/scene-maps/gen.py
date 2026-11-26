@@ -25,7 +25,7 @@ data = {
   'boxes': boxes, 'props': props, 'spawns': spawns, 'lights': lights,
   'theme': meta['theme'],
 }
-for k in ('sunFrom', 'sunIntensity', 'lightColor', 'lightIntensity'):
+for k in ('sunFrom', 'sunIntensity', 'lightColor', 'lightIntensity', 'surface', 'sky'):
     if k in meta: data[k] = meta[k]
 camel = ''.join(w.capitalize() for w in mid.split('_'))
 ts = f"""// Gerado por script a partir do cenário {meta['source']} — não editar à mão.

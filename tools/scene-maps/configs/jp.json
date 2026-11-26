@@ -32,5 +32,61 @@
    "tol": 0.002
   }
  ],
- "floorY": 0.0
+ "floorY": 0.0,
+ "autoExtras": [
+  {
+   "type": "plastic_chair",
+   "count": 2,
+   "size": [
+    0.58,
+    0.88,
+    0.57
+   ]
+  },
+  {
+   "type": "wooden_crate",
+   "count": 1,
+   "size": [
+    0.75,
+    0.35,
+    0.38
+   ]
+  },
+  {
+   "type": "book_stack",
+   "count": 1,
+   "size": [
+    0.5,
+    0.24,
+    0.16
+   ]
+  },
+  {
+   "type": "boombox",
+   "count": 1,
+   "size": [
+    0.66,
+    0.47,
+    0.18
+   ]
+  },
+  {
+   "type": "wicker_basket",
+   "count": 1,
+   "size": [
+    0.34,
+    0.12,
+    0.27
+   ]
+  },
+  {
+   "type": "plant_pot",
+   "count": 1,
+   "size": [
+    0.5,
+    1.1,
+    0.5
+   ]
+  }
+ ]
 }

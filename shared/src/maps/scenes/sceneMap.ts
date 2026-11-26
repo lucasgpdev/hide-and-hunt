@@ -1,4 +1,4 @@
-import type { MapDefinition, MapLight, PropPlacement, Solid, Vec3 } from '../types.js';
+import type { FloorSurface, MapDefinition, MapLight, PropPlacement, Solid, Vec3 } from '../types.js';
 
 /**
  * Dados de um mapa feito a partir de um cenário 3D pronto (cenas de pesquisa
@@ -29,6 +29,10 @@ export interface SceneMapData {
   sunFrom?: Vec3;
   sunIntensity?: number;
   theme: MapDefinition['theme'];
+  /** Piso (som dos passos). */
+  surface?: FloorSurface;
+  /** Panorama visto pelas janelas. */
+  sky?: string;
 }
 
 export function sceneMap(data: SceneMapData): MapDefinition {
@@ -57,7 +61,7 @@ export function sceneMap(data: SceneMapData): MapDefinition {
     size: data.size,
     wallHeight: data.wallHeight,
     theme: data.theme,
-    zones: [{ name: data.name, rect: [-w / 2, -d / 2, w / 2, d / 2], floorColor: data.theme.floor, surface: 'wood' }],
+    zones: [{ name: data.name, rect: [-w / 2, -d / 2, w / 2, d / 2], floorColor: data.theme.floor, surface: data.surface ?? 'wood' }],
     solids,
     props,
     lights,
@@ -69,6 +73,7 @@ export function sceneMap(data: SceneMapData): MapDefinition {
       offset: data.offset,
       ...(data.sunFrom ? { sunFrom: data.sunFrom } : {}),
       ...(data.sunIntensity !== undefined ? { sunIntensity: data.sunIntensity } : {}),
+      sky: data.sky ?? 'noon_grass',
     },
   };
 }

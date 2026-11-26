@@ -50,6 +50,8 @@ export interface MapScene {
   sunFrom?: Vec3;
   /** Intensidade do sol. */
   sunIntensity?: number;
+  /** Panorama visto pelas janelas (arquivo em client/public/sky). */
+  sky?: string;
 }
 
 /** Objeto do cenário em que é possível se transformar. */

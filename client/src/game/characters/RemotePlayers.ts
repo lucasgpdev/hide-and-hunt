@@ -74,8 +74,13 @@ export class RemotePlayers {
     const list: THREE.Object3D[] = [];
     for (const remote of this.remotes.values()) {
       if (!remote.avatar.root.visible) continue;
+      if (!remote.avatar.disguise) {
+        // Humano: só a caixa de mira (nada de malha animada).
+        list.push(remote.avatar.hitbox);
+        continue;
+      }
       remote.avatar.root.traverse((child) => {
-        if ((child as THREE.Mesh).isMesh) list.push(child);
+        if ((child as THREE.Mesh).isMesh && child !== remote.avatar.hitbox) list.push(child);
       });
     }
     return list;

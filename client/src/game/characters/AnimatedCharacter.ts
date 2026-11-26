@@ -5,7 +5,17 @@ import { createAccessory } from './accessories';
 import { getCharacterAsset, type CharacterModelId } from './characterAssets';
 import { assembleCharacter, quaterniusAnimations, quaterniusReady } from './quaternius';
 
-type ClipSet = { idle: string; walk: string; run: string; jump?: string; emotes: Record<string, string> };
+type ClipSet = {
+  idle: string;
+  walk: string;
+  run: string;
+  jump?: string;
+  /** Corrida rápida (só nos personagens realistas). */
+  sprint?: string;
+  /** Distância percorrida em um ciclo de cada animação (m), medida no movimento de raiz original. */
+  cycle?: { walk: number; run: number; sprint: number };
+  emotes: Record<string, string>;
+};
 
 /** Animações dos personagens realistas (Universal Animation Library). */
 const REALISTIC_CLIPS: ClipSet = {
@@ -13,7 +23,22 @@ const REALISTIC_CLIPS: ClipSet = {
   walk: 'Walk_Loop',
   run: 'Jog_Fwd_Loop',
   jump: 'Jump_Loop',
-  emotes: { dance: 'Dance_Loop', wave: 'Interact', thumbs: 'Idle_Talking_Loop', yes: 'Idle_Talking_Loop', no: 'Hit_Chest', jump: 'Jump_Start' },
+  sprint: 'Sprint_Loop',
+  // Universal Animation Library (versão com movimento de raiz): caminhada 1,3 m/ciclo,
+  // trote 5,0 m/ciclo, corrida 5,5 m/ciclo.
+  cycle: { walk: 1.3, run: 5.0, sprint: 5.5 },
+  emotes: {
+    dance: 'Dance_Loop',
+    wave: 'Interact',
+    thumbs: 'Idle_Talking_Loop',
+    yes: 'Idle_Talking_Loop',
+    no: 'Hit_Chest',
+    jump: 'Jump_Start',
+    sit: 'Sitting_Idle_Loop',
+    crouch: 'Crouch_Idle_Loop',
+    punch: 'Punch_Cross',
+    spell: 'Spell_Simple_Shoot',
+  },
 };
 
 /** Visuais padrão de cada equipe (variam por jogador, para a sala não ter clones). */
@@ -68,6 +93,20 @@ export class AnimatedCharacter {
   private readonly run: THREE.AnimationAction;
   private readonly emoteActions = new Map<string, THREE.AnimationAction>();
   private readonly jump: THREE.AnimationAction | null = null;
+  private readonly sprint: THREE.AnimationAction | null = null;
+  private readonly cycle: ClipSet['cycle'];
+  private readonly strideScale: number;
+  /** Fase da passada (0..1 = um ciclo de dois passos), comum a caminhada/trote/corrida. */
+  private phase = 0;
+  private lastYaw: number | null = null;
+  private lastSpeed = 0;
+  private lean = 0;
+  private pitch = 0;
+  private airTime = 0;
+  private landDip = 0;
+  private readonly yawProbe = new THREE.Vector3();
+  /** Chamado a cada passo no chão (velocidade em m/s), para o som de passos. */
+  onStep: ((speed: number) => void) | null = null;
   private emote: THREE.AnimationAction | null = null;
   private airborne = 0;
   private cape: THREE.Object3D | null = null;
@@ -103,6 +142,13 @@ export class AnimatedCharacter {
       action.setEffectiveWeight(0);
     }
     this.idle.setEffectiveWeight(1);
+    this.cycle = names.cycle;
+    this.strideScale = scale;
+    if (names.sprint && animations.some((a) => a.name === names.sprint)) {
+      this.sprint = this.mixer.clipAction(clip(names.sprint));
+      this.sprint.play();
+      this.sprint.setEffectiveWeight(0);
+    }
     if (names.jump && animations.some((a) => a.name === names.jump)) {
       this.jump = this.mixer.clipAction(clip(names.jump));
       this.jump.play();
@@ -112,7 +158,9 @@ export class AnimatedCharacter {
       const c = animations.find((a) => a.name === clipName);
       if (!c) continue;
       const action = this.mixer.clipAction(c);
-      action.setLoop(THREE.LoopOnce, 1);
+      // Poses contínuas (sentar, agachar, dançar) seguram alguns ciclos; as demais tocam uma vez.
+      if (/_Loop$/.test(clipName)) action.setLoop(THREE.LoopRepeat, clipName.startsWith('Dance') ? 2 : 3);
+      else action.setLoop(THREE.LoopOnce, 1);
       action.clampWhenFinished = false;
       this.emoteActions.set(emote, action);
     }
@@ -256,6 +304,10 @@ export class AnimatedCharacter {
    * @param speed velocidade horizontal (m/s)
    */
   update(dt: number, speed: number, grounded: boolean): void {
+    if (this.cycle && this.sprint) {
+      this.updateRealistic(dt, speed, grounded);
+      return;
+    }
     this.airborne = grounded ? Math.max(0, this.airborne - dt * 6) : Math.min(1, this.airborne + dt * 6);
     const moving = this.emote ? 0 : Math.min(1, speed / 1.2);
     const running = THREE.MathUtils.clamp((speed - 3) / 2.5, 0, 1);
@@ -285,6 +337,85 @@ export class AnimatedCharacter {
     this.mixer.update(dt);
   }
 
+  /**
+   * Locomoção dos personagens realistas: as três animações (caminhada, trote e
+   * corrida) andam na mesma fase, avançada pela distância realmente percorrida —
+   * o pé não "patina" em nenhuma velocidade. O corpo inclina nas curvas e ao
+   * acelerar/frear, e dá uma leve agachada ao aterrissar.
+   */
+  private updateRealistic(dt: number, rawSpeed: number, grounded: boolean): void {
+    const cycle = this.cycle!;
+    const sprint = this.sprint!;
+    const speed = this.emote ? 0 : rawSpeed;
+    if (dt <= 0) return;
+
+    // Ar: congela a passada; aterrissagem com agachada proporcional à queda.
+    if (!grounded) this.airTime += dt;
+    else if (this.airTime > 0) {
+      if (this.airTime > 0.3) this.landDip = Math.min(1, this.airTime * 0.9);
+      this.airTime = 0;
+    }
+    this.airborne = grounded ? Math.max(0, this.airborne - dt * 7) : Math.min(1, this.airborne + dt * 5);
+
+    // Pesos: parado → caminhada → trote → corrida.
+    const wWalk = smooth(speed, 0.12, 0.9) * (1 - smooth(speed, 1.4, 3.0));
+    const wRun = smooth(speed, 1.4, 3.0) * (1 - smooth(speed, 5.0, 6.3));
+    const wSprint = smooth(speed, 5.0, 6.3);
+    const wIdle = 1 - smooth(speed, 0.05, 0.7);
+    const total = wWalk + wRun + wSprint + wIdle || 1;
+    const air = this.jump ? this.airborne : 0;
+    const k = Math.min(1, dt * 9);
+    blend(this.idle, (wIdle / total) * (1 - air), k);
+    blend(this.walk, (wWalk / total) * (1 - air), k);
+    blend(this.run, (wRun / total) * (1 - air), k);
+    blend(sprint, (wSprint / total) * (1 - air), k);
+    if (this.jump) blend(this.jump, air, k);
+
+    // Fase comum: avança pela distância percorrida ÷ distância de um ciclo.
+    const moveW = wWalk + wRun + wSprint;
+    if (moveW > 0.001 && grounded) {
+      const dist = ((wWalk * cycle.walk + wRun * cycle.run + wSprint * cycle.sprint) / moveW) * this.strideScale;
+      const before = this.phase;
+      this.phase = (this.phase + (dt * speed) / dist) % 1;
+      // Dois passos por ciclo (pé esquerdo em 0, direito em 0,5).
+      const stepped = Math.floor(before * 2) !== Math.floor(this.phase * 2) || this.phase < before;
+      if (stepped && speed > 0.6) this.onStep?.(speed);
+    }
+    for (const action of [this.walk, this.run, sprint]) {
+      action.timeScale = 0;
+      action.time = this.phase * action.getClip().duration;
+    }
+
+    // Inclinação nas curvas (pela velocidade angular do corpo) e ao acelerar.
+    this.root.getWorldDirection(this.yawProbe);
+    const yaw = Math.atan2(this.yawProbe.x, this.yawProbe.z);
+    let turn = 0;
+    if (this.lastYaw !== null) {
+      let d = yaw - this.lastYaw;
+      while (d > Math.PI) d -= Math.PI * 2;
+      while (d < -Math.PI) d += Math.PI * 2;
+      turn = d / dt;
+    }
+    this.lastYaw = yaw;
+    const accel = (speed - this.lastSpeed) / dt;
+    this.lastSpeed = speed;
+    const leanTarget = THREE.MathUtils.clamp(-turn * speed * 0.022, -0.2, 0.2);
+    const pitchTarget = THREE.MathUtils.clamp(accel * 0.01, -0.07, 0.1) + wSprint * 0.06 - this.airborne * 0.05;
+    this.lean += (leanTarget - this.lean) * Math.min(1, dt * 7);
+    this.pitch += (pitchTarget - this.pitch) * Math.min(1, dt * 5);
+    this.landDip = Math.max(0, this.landDip - dt * 4);
+    this.root.rotation.z = this.lean;
+    this.root.rotation.x = this.pitch + this.landDip * 0.06;
+    this.root.position.y = -Math.sin(this.landDip * Math.PI) * 0.07;
+
+    if (this.cape) {
+      this.capeSwing += dt * (2 + speed);
+      const target = Math.min(0.55, speed * 0.08) + Math.sin(this.capeSwing) * (0.03 + speed * 0.015);
+      this.cape.rotation.x += (target - this.cape.rotation.x) * Math.min(1, dt * 6);
+    }
+    this.mixer.update(dt);
+  }
+
   dispose(): void {
     this.mixer.stopAllAction();
     this.root.traverse((child) => {
@@ -307,4 +438,10 @@ function findBone(root: THREE.Object3D, suffix: string): THREE.Object3D | null {
     if (!found && child.name.endsWith(suffix) && !child.name.includes('Index') && !child.name.includes('Thumb')) found = child;
   });
   return found;
+}
+
+/** Rampa suave de 0 (em a) a 1 (em b). */
+function smooth(x: number, a: number, b: number): number {
+  const t = THREE.MathUtils.clamp((x - a) / (b - a), 0, 1);
+  return t * t * (3 - 2 * t);
 }

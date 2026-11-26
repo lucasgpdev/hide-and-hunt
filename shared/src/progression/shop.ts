@@ -184,6 +184,10 @@ export const EMOTES = [
   { id: 'dance', name: 'Dançar', icon: '💃', free: false },
   { id: 'thumbs', name: 'Joinha', icon: '👍', free: false },
   { id: 'jump', name: 'Pulo de alegria', icon: '🎉', free: false },
+  { id: 'sit', name: 'Sentar', icon: '🪑', free: true },
+  { id: 'crouch', name: 'Agachar', icon: '🫣', free: true },
+  { id: 'punch', name: 'Soco no ar', icon: '👊', free: false },
+  { id: 'spell', name: 'Feitiço', icon: '✨', free: false },
 ] as const;
 export type EmoteId = (typeof EMOTES)[number]['id'];
 
