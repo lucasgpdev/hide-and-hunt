@@ -5,6 +5,7 @@ import type { GameSettings } from '../../settings/settings';
 import { pbr, worldBox, type MaterialKey } from '../materials/library';
 import { createPropModel } from '../objects/propModels';
 import { cachedMapScene, loadMapScene } from './mapScenes';
+import { addWind, createGrassField } from '../effects/nature';
 import { boxGeometry, canvasTexture, material, ModelBuilder, sphereGeometry } from '../objects/primitives';
 
 const SURFACES: Record<FloorSurface, MaterialKey> = {
@@ -100,6 +101,23 @@ export class MapView {
         const [x0, z0, x1, z1] = zone.rect;
         staticRoot.add(this.floor(x1 - x0, z1 - z0, (x0 + x1) / 2, (z0 + z1) / 2, SURFACES[zone.surface ?? 'grass'], -0.03 + rank * 0.004));
       });
+      // Tufos de grama com flores (balançam com o vento) nas áreas de grama.
+      if (settings.graphics !== 'low' && open.length) {
+        const density = settings.graphics === 'high' ? 5 : 3;
+        const houses = map.zones.filter((z) => z.covered).map((z) => [z.rect[0] - 0.8, z.rect[1] - 0.8, z.rect[2] + 0.8, z.rect[3] + 0.8] as [number, number, number, number]);
+        const sorted = [...open].sort((a, b) => area(a) - area(b));
+        const yard = sorted[0]!;
+        if (yard.surface === 'grass' || yard.surface === undefined) {
+          this.addGrass(createGrassField(yard.rect, houses, density));
+        }
+        // Faixa de grama do lado de fora da cerca (mais rala).
+        const outer = sorted[sorted.length - 1]!;
+        if (outer !== yard && (outer.surface ?? 'grass') === 'grass') {
+          const [a, b, c, d] = yard.rect;
+          const band: [number, number, number, number] = [a - 14, b - 14, c + 14, d + 14];
+          this.addGrass(createGrassField(band, [[a - 0.2, b - 0.2, c + 0.2, d + 0.2], ...houses], density * 0.45));
+        }
+      }
     }
 
     // Teto com placas de forro (mapas abertos, como a cidade, não têm teto).
@@ -310,6 +328,16 @@ export class MapView {
     if (scene.rotationY) clone.rotation.y = scene.rotationY;
     if (scene.scale) clone.scale.setScalar(scene.scale);
     if (scene.castShadow === false) clone.traverse((child) => (child.castShadow = false));
+    // Folhas das árvores e arbustos balançam com o vento.
+    if (scene.url.startsWith('/models/yard/')) {
+      clone.traverse((child) => {
+        const mesh = child as THREE.Mesh;
+        if (!mesh.isMesh) return;
+        for (const m of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
+          if (m.alphaTest > 0 || /leaf|leaves|twig|shrub/i.test(m.name)) addWind(m, 1);
+        }
+      });
+    }
     clone.updateMatrixWorld(true);
     const world = new THREE.Vector3();
     clone.traverse((child) => {
@@ -355,6 +383,11 @@ export class MapView {
   }
 
   private disposed = false;
+
+  private addGrass(field: THREE.Group): void {
+    this.root.add(field);
+    this.owned.push({ dispose: () => (field.userData.dispose as () => void)() });
+  }
 
   dispose(): void {
     this.disposed = true;

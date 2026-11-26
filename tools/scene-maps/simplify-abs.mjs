@@ -18,7 +18,8 @@ for (const node of doc.getRoot().listNodes()) {
   for (const prim of mesh.listPrimitives()) {
     const n = (prim.getIndices()?.getCount() ?? 0) / 3;
     before += n;
-    if (n > minTris) simplifyPrimitive(prim, { simplifier: MeshoptSimplifier, ratio: 0.02, error: Math.min(0.08, abs / diag), lockBorder: false });
+    // cartões de folhas (recorte por transparência) não se simplificam: viram borrões
+    if (n > minTris && prim.getMaterial()?.getAlphaMode() !== 'MASK') simplifyPrimitive(prim, { simplifier: MeshoptSimplifier, ratio: 0.02, error: Math.min(0.08, abs / diag), lockBorder: false });
     after += (prim.getIndices()?.getCount() ?? 0) / 3;
   }
 }

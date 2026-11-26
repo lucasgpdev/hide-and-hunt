@@ -260,8 +260,8 @@
  ],
  "yardSpawns": 16,
  "backdrop": [
-  "tree_b",
-  "tree_a"
+  "tree_b_far",
+  "tree_a_far"
  ],
  "meta": {
   "name": "Escola",
@@ -288,5 +288,5 @@
  "compress": {
   "ABS": "0.003"
  },
- "backdropSpacing": 10
+ "backdropSpacing": 9
 }

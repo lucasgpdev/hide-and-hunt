@@ -28,6 +28,7 @@ import { Effects } from '../effects/Effects';
 import { loadMapAssets, mapAssetsReady } from '../maps/mapAssets';
 import { MapView } from '../maps/MapView';
 import { RemoteFlashlights } from '../effects/flashlight';
+import { wind } from '../effects/nature';
 import { installFastRaycast } from '../physics/fastRaycast';
 import { setMaxAnisotropy } from '../materials/textures';
 import { createPropModel } from '../objects/propModels';
@@ -348,8 +349,11 @@ export class Game {
         this.scene.background = texture;
         this.scene.backgroundIntensity = 1;
       });
-      this.scene.fog = null;
+      // Mapas abertos: névoa leve de distância (dá profundidade e esconde o fim do chão).
+      this.scene.fog = map.extraScenes ? new THREE.Fog('#93a3a2', 30, this.openFar()) : null;
     }
+    this.camera.far = map.extraScenes ? this.openFar() : this.settings.renderDistance;
+    this.camera.updateProjectionMatrix();
     const [envName, envIntensity] = MAP_ENVIRONMENT[mapId] ?? ['lobby', 0.5];
     this.baseEnvIntensity = envIntensity;
     void loadEnvironment(this.renderer, envName)
@@ -497,6 +501,7 @@ export class Game {
     const dt = Math.min(0.05, realDt);
     this.lastFrame = now;
     this.time += dt;
+    wind.time.value = this.time;
     this.update(dt);
     this.postfx.render();
 
@@ -539,6 +544,11 @@ export class Game {
       this.resScale = next;
       this.applyResolution();
     }
+  }
+
+  /** Mapas abertos enxergam mais longe que a distância de renderização dos fechados. */
+  private openFar(): number {
+    return Math.max(this.settings.renderDistance, 110);
   }
 
   private applyResolution(): void {
@@ -669,8 +679,10 @@ export class Game {
     this.renderer.toneMappingExposure = room.state === 'WAITING' ? 1 : preset.exposure;
     if (this.scene.fog instanceof THREE.Fog) {
       const fogFactor = room.ambience.weather === 'fog' && room.state !== 'WAITING' ? 0.35 : 1;
-      this.scene.fog.near = this.settings.renderDistance * 0.5 * fogFactor;
-      this.scene.fog.far = this.settings.renderDistance * fogFactor;
+      const open = Boolean(getMap(world.mapId)?.extraScenes);
+      const far = open ? this.openFar() : this.settings.renderDistance;
+      this.scene.fog.near = (open ? 30 : far * 0.5) * fogFactor;
+      this.scene.fog.far = far * fogFactor;
     }
   }
 
@@ -974,7 +986,7 @@ export class Game {
     if (!settings.autoQuality) this.resScale = 1;
     this.renderer.setPixelRatio(Math.max(0.5, this.baseRatio * this.resScale));
     this.camera.fov = settings.fov;
-    this.camera.far = settings.renderDistance;
+    this.camera.far = this.world && getMap(this.world.mapId)?.extraScenes ? this.openFar() : settings.renderDistance;
     this.camera.updateProjectionMatrix();
     if (graphicsChanged && this.world) this.buildWorld(this.world.mapId);
     this.postfx.configure(settings.graphics, this.container.clientWidth || window.innerWidth, this.container.clientHeight || window.innerHeight);
