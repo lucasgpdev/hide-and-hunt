@@ -1,23 +1,29 @@
 # Mantém o servidor gratuito da Render acordado: ele dorme após 15 minutos
-# sem visitas. A cada 10 minutos este job chama a rota de saúde do jogo.
+# sem visitas. O agendamento do GitHub atrasa e pula execuções, então cada
+# execução fica viva por quase 6 horas chamando a rota de saúde a cada 8
+# minutos; o agendamento só precisa disparar algumas vezes por dia, e o
+# "concurrency" garante que só uma fique rodando.
 name: Manter servidor acordado
 
 on:
   schedule:
-    - cron: '*/10 * * * *'
+    - cron: '7 */2 * * *'
   workflow_dispatch:
+
+concurrency:
+  group: keep-awake
+  cancel-in-progress: true
 
 jobs:
   ping:
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 355
     steps:
-      - name: Chamar /api/health
+      - name: Chamar /api/health a cada 8 minutos
         run: |
-          for i in 1 2 3; do
-            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 https://hide-and-hunt-b2i2.onrender.com/api/health || true)
-            echo "tentativa $i: HTTP $code"
-            [ "$code" = "200" ] && exit 0
-            sleep 20
+          end=$(( $(date +%s) + 350*60 ))
+          while [ "$(date +%s)" -lt "$end" ]; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 90 https://hide-and-hunt-b2i2.onrender.com/api/health || true)
+            echo "$(date -u +%H:%M) HTTP $code"
+            sleep 480
           done
-          echo "Servidor não respondeu (pode estar acordando)."
