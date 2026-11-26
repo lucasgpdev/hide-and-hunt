@@ -16,6 +16,7 @@ const DEFAULTS: RoomSettings = {
   mode: 'custom',
   randomEvents: true,
   abilities: true,
+  bots: 3,
 };
 
 /** CRIAR SALA: sala privada com regras personalizadas e código de convite. */

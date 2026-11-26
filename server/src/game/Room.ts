@@ -58,6 +58,7 @@ import {
   type RoomPhysics,
   type Vec3,
 } from './physics.js';
+import { BotBrain, botName, buildNavGrid, type BotWorld, type NavGrid } from './bots.js';
 
 export interface RoomPlayer {
   id: string;
@@ -97,6 +98,8 @@ export interface RoomPlayer {
   partnerId: string | null;
   /** Entrou na equipe dos caçadores durante a partida (Infecção). */
   infected: boolean;
+  /** Jogador controlado pelo servidor. */
+  bot?: boolean;
 }
 
 /** Saídas da sala. O RoomManager conecta isto ao Socket.IO; os testes usam espiões. */
@@ -129,6 +132,7 @@ export const DEFAULT_ROOM_SETTINGS: RoomSettings = {
   mode: 'classic',
   randomEvents: true,
   abilities: true,
+  bots: 3,
 };
 
 export interface RoomOptions {
@@ -176,6 +180,11 @@ export class Room {
   ambience: Ambience = { lighting: 'day', weather: 'clear' };
   matchId: string | null = null;
   private readonly clones = new Map<string, CloneState>();
+  private readonly brains = new Map<string, BotBrain>();
+  private navGrid: NavGrid | null = null;
+  private botSeq = 0;
+  /** Desde quando a sala espera jogadores (os bots entram depois de um tempo). */
+  private waitingSince = 0;
   private readonly votes = new Map<string, string>();
   private nextEventAt = 0;
   private nextAutoRadarAt = 0;
@@ -197,6 +206,7 @@ export class Room {
     this.output = options.output;
     this.createPhysics = options.createPhysics;
     this.now = options.now ?? Date.now;
+    this.waitingSince = this.now();
     this.random = options.random ?? Math.random;
     this.publicMinPlayers = Math.max(options.publicMinPlayers ?? BALANCE.rooms.publicMinPlayers, this.settings.mode === 'competitive' ? 4 : 0);
     this.useLobby = options.useLobby ?? true;
@@ -224,6 +234,13 @@ export class Room {
 
   get isEmpty(): boolean {
     return this.players.size === 0;
+  }
+
+  /** Pessoas de verdade conectadas (sem bots). */
+  get humanCount(): number {
+    let count = 0;
+    for (const p of this.players.values()) if (p.connected && !p.bot) count += 1;
+    return count;
   }
 
   get inMatch(): boolean {
@@ -299,8 +316,9 @@ export class Room {
     this.players.delete(playerId);
     this.votes.delete(playerId);
     for (const other of this.players.values()) if (other.partnerId === playerId) other.partnerId = null;
+    this.brains.delete(playerId);
     if (this.hostId === playerId) {
-      this.hostId = this.isPrivate ? (this.players.keys().next().value ?? null) : null;
+      this.hostId = this.isPrivate ? ([...this.players.values()].find((p) => !p.bot)?.id ?? null) : null;
     }
     this.output.feed(this, { type: 'leave', playerId });
     this.markDirty();
@@ -695,6 +713,7 @@ export class Room {
       }
     }
 
+    this.syncBots();
     switch (this.state) {
       case 'WAITING':
         if (!this.isPrivate && this.connectedCount >= this.publicMinPlayers) this.enterCountdown();
@@ -719,6 +738,7 @@ export class Room {
         break;
     }
 
+    if (this.inMatch) this.tickBots(now);
     if (this.inMatch) {
       this.tickEvents(now);
       this.tickModeRules(now);
@@ -809,6 +829,7 @@ export class Room {
   // ---------- transições ----------
 
   private enterWaiting(): void {
+    this.waitingSince = this.now();
     this.setState('WAITING', null);
     this.winner = null;
     this.event = null;
@@ -849,7 +870,7 @@ export class Room {
   private enterHiding(): void {
     const now = this.now();
     this.matchStartedAt = now;
-    this.setState('HIDING', this.settings.hidingSeconds);
+    this.setState('HIDING', this.settings.hidingSeconds + this.bigMapBonus().hiding);
     let hiderIndex = 0;
     let hunterIndex = 0;
     for (const p of this.players.values()) {
@@ -877,7 +898,7 @@ export class Room {
 
   private enterHunting(): void {
     const multiplier = this.mode === 'survival' ? 2 : this.mode === 'lone_hunter' ? 1.25 : 1;
-    this.setState('HUNTING', Math.round(this.settings.huntingSeconds * multiplier));
+    this.setState('HUNTING', Math.round(this.settings.huntingSeconds * multiplier * this.bigMapBonus().hunting));
     this.nextAutoRadarAt = this.now() + 90_000;
     this.recordEvent('A caçada começou');
     this.output.feed(this, { type: 'info', message: 'A caçada começou!' });
@@ -1124,12 +1145,74 @@ export class Room {
 
   // ---------- mapa ----------
 
+  /**
+   * Mapas grandes com pouca gente: mais tempo para chegar ao esconderijo e um
+   * pouco mais de caçada (o caçador anda mais para achar alguém).
+   */
+  private bigMapBonus(): { hiding: number; hunting: number } {
+    const map = getMap(this.mapId);
+    const area = map ? map.size[0] * map.size[1] : 0;
+    if (area < 900 || !map?.extraScenes) return { hiding: 0, hunting: 1 };
+    const players = [...this.players.values()].filter((p) => p.team).length;
+    const sparse = players <= 6 ? 1 : players <= 10 ? 0.5 : 0;
+    return { hiding: 10, hunting: 1 + 0.15 * sparse };
+  }
+
+  // ---------- bots ----------
+
+  /**
+   * Mantém a quantidade de bots: o número escolhido nas configurações, menos
+   * quando a sala já tem gente suficiente (até 6 jogadores no total). Só
+   * entram/saem fora da partida; sem ninguém de verdade, saem todos.
+   */
+  private syncBots(): void {
+    const humans = this.humanCount;
+    const bots = [...this.players.values()].filter((p) => p.bot);
+    if (humans === 0) {
+      for (const bot of bots) this.removePlayer(bot.id);
+      return;
+    }
+    if (this.inMatch || this.state === 'COUNTDOWN') return;
+    const delay = this.isPrivate ? 6000 : 15000;
+    if (this.state === 'WAITING' && bots.length === 0 && this.now() - this.waitingSince < delay) return;
+    const wanted = Math.max(0, Math.min(this.settings.bots ?? 0, 6 - humans, this.settings.maxPlayers - humans));
+    for (let i = bots.length; i < wanted; i++) {
+      const seq = this.botSeq++;
+      const player = this.addPlayer({ id: `bot-${this.code}-${seq}`, accountId: `bot:${seq}`, nickname: botName(seq), skin: 'default', level: 1 + Math.floor(this.random() * 20) });
+      player.bot = true;
+      this.brains.set(player.id, new BotBrain(player.id));
+    }
+    for (const bot of bots.slice(wanted)) this.removePlayer(bot.id);
+  }
+
+  private tickBots(now: number): void {
+    if (this.brains.size === 0) return;
+    this.navGrid ??= buildNavGrid(this.physics, this.mapId);
+    const grid = this.navGrid;
+    const world: BotWorld = {
+      state: this.state,
+      mapId: this.mapId,
+      physics: this.physics,
+      players: this.players,
+      random: this.random,
+      now,
+      transform: (id, propId) => this.transform(id, propId),
+      capture: (id, targetId) => this.capture(id, targetId),
+      isFrozen: (id) => {
+        const p = this.players.get(id);
+        return p ? this.isFrozen(p) : true;
+      },
+    };
+    for (const brain of this.brains.values()) brain.tick(world, grid);
+  }
+
   private loadMap(mapId: string): void {
     if (mapId === this.mapId && this.physics) {
       this.resetMapState();
       return;
     }
     this.mapId = mapId;
+    this.navGrid = null;
     this.physics.world.free();
     this.physics = this.createPhysics(mapId);
     this.resetMapState();

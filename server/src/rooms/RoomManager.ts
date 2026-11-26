@@ -307,7 +307,7 @@ export class RoomManager {
     const entries = [];
     for (const result of results.players) {
       const player = players.find((p) => p.id === result.id);
-      if (!player || seen.has(player.accountId)) continue;
+      if (!player || player.bot || seen.has(player.accountId)) continue;
       seen.add(player.accountId);
       entries.push({ accountId: player.accountId, result, won: result.team === results.winner, nickname: player.nickname, rejectedMoves: player.rejectedMoves });
       // Detecção de comportamento suspeito: muitos movimentos impossíveis.

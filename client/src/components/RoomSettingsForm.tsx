@@ -41,7 +41,7 @@ export function RoomSettingsForm({ value, onChange, disabled }: Props) {
       <label className="field">
         <span>Mapa</span>
         <select value={value.mapId} disabled={disabled} onChange={(e) => set({ mapId: e.target.value })}>
-          {MAP_CATALOG.map((map) => (
+          {MAP_CATALOG.filter((map) => map.available).map((map) => (
             <option key={map.id} value={map.id} disabled={!map.available}>
               {map.name}
               {map.available ? '' : ' (em breve)'}
@@ -70,6 +70,16 @@ export function RoomSettingsForm({ value, onChange, disabled }: Props) {
       <label className="field field--inline">
         <input type="checkbox" checked={value.abilities} disabled={disabled} onChange={(e) => set({ abilities: e.target.checked })} />
         <span>Habilidades especiais liberadas</span>
+      </label>
+      <label className="field">
+        <span>Bots (completam a sala; saem quando entra gente)</span>
+        <select value={String(value.bots ?? 0)} disabled={disabled} onChange={(e) => set({ bots: Number(e.target.value) })}>
+          {[0, 1, 2, 3, 4, 5].map((n) => (
+            <option key={n} value={n}>
+              {n === 0 ? 'Nenhum' : `${n} bot${n > 1 ? 's' : ''}`}
+            </option>
+          ))}
+        </select>
       </label>
       <label className="field">
         <span>Caçadores</span>

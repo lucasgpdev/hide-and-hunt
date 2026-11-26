@@ -61,6 +61,7 @@ export const roomSettingsSchema = z.strictObject({
   mode: z.enum(GAME_MODES),
   randomEvents: z.boolean(),
   abilities: z.boolean(),
+  bots: z.number().int().min(0).max(8),
 });
 
 export const roomSettingsPatchSchema = roomSettingsSchema.partial();

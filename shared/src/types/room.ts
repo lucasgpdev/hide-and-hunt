@@ -22,6 +22,8 @@ export interface RoomSettings {
   randomEvents: boolean;
   /** Habilidades especiais liberadas (recursos permitidos). */
   abilities: boolean;
+  /** Bots para completar a sala (somem quando entra gente). */
+  bots: number;
 }
 
 export interface RoomPlayerInfo {
