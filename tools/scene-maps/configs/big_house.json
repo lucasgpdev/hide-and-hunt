@@ -132,36 +132,15 @@
  ],
  "trees": [
   {
-   "file": "fir_a",
-   "count": 3,
-   "radius": 2.2,
-   "trunk": 0.35,
-   "height": 8
-  },
-  {
-   "file": "fir_b",
-   "count": 3,
-   "radius": 1.9,
-   "trunk": 0.3,
-   "height": 7
-  },
-  {
-   "file": "fir_c",
-   "count": 2,
-   "radius": 1.9,
-   "trunk": 0.3,
-   "height": 5.5
-  },
-  {
    "file": "tree_a",
-   "count": 3,
+   "count": 4,
    "radius": 1.8,
    "trunk": 0.3,
    "height": 3.2
   },
   {
    "file": "tree_b",
-   "count": 2,
+   "count": 4,
    "radius": 1.6,
    "trunk": 0.3,
    "height": 4.4
@@ -297,13 +276,11 @@
   }
  ],
  "yardSpawns": 16,
- "skipRooms": false,
+ "skipRooms": true,
  "root": "/home/claude/HIDE-AND-HUNT",
  "backdrop": [
-  "fir_a",
-  "fir_b",
-  "fir_c",
-  "tree_b"
+  "tree_b",
+  "tree_a"
  ],
  "meta": {
   "name": "Casa Grande",
@@ -325,5 +302,9 @@
   "sky": "noon_grass",
   "lightColor": "#ffe7c4",
   "lightIntensity": 0.18
- }
+ },
+ "compress": {
+  "ABS": "0.003"
+ },
+ "backdropSpacing": 10
 }

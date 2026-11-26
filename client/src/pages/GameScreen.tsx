@@ -49,8 +49,7 @@ export function GameScreen() {
           loadRapier(),
           import('../game/core/Game'),
           preloadCharacters(),
-          import('../game/objects/propModels').then((m) => m.preloadPropModels()),
-          import('../game/maps/mapScenes').then((m) => m.preloadMapScenes()),
+          import('../game/maps/mapAssets').then((m) => m.loadInitialMapAssets(network.getState().room?.mapId)),
         ]);
         if (cancelled) return;
         const game = new Game(container, RAPIER, network, localId);

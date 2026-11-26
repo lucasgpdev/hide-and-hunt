@@ -69,6 +69,8 @@ export interface GameSettings {
   musicVolume: number;
   graphics: 'low' | 'medium' | 'high';
   shadows: boolean;
+  /** Baixa a resolução sozinho quando o FPS cai (e volta quando melhora). */
+  autoQuality: boolean;
   /** Distância de renderização (névoa e corte da câmera), em metros. */
   renderDistance: number;
   showFps: boolean;
@@ -99,6 +101,7 @@ export const DEFAULT_SETTINGS: GameSettings = {
   musicVolume: 0.35,
   graphics: 'medium',
   shadows: true,
+  autoQuality: true,
   renderDistance: 60,
   showFps: true,
   fpsLimit: 0,

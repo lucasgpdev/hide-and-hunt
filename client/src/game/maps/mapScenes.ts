@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import type { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { getMap, MAP_CATALOG } from '@hh/shared';
 
 /**
  * Cenários 3D prontos (glTF) usados por alguns mapas. São carregados uma vez
@@ -51,17 +50,6 @@ export function loadMapScene(url: string): Promise<THREE.Object3D | null> {
     pending.set(url, promise);
   }
   return promise;
-}
-
-/** Carrega todos os cenários 3D dos mapas jogáveis. */
-export async function preloadMapScenes(): Promise<void> {
-  const urls = new Set<string>();
-  for (const entry of MAP_CATALOG) {
-    const map = entry.available ? getMap(entry.id) : undefined;
-    if (map?.scene) urls.add(map.scene.url);
-    for (const extra of map?.extraScenes ?? []) urls.add(extra.url);
-  }
-  await Promise.all([...urls].map((url) => loadMapScene(url)));
 }
 
 /**

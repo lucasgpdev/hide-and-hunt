@@ -307,6 +307,7 @@ export class MapView {
     clone.position.set(...scene.offset);
     if (scene.rotationY) clone.rotation.y = scene.rotationY;
     if (scene.scale) clone.scale.setScalar(scene.scale);
+    if (scene.castShadow === false) clone.traverse((child) => (child.castShadow = false));
     clone.updateMatrixWorld(true);
     const world = new THREE.Vector3();
     clone.traverse((child) => {

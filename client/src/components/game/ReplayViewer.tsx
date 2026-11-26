@@ -25,8 +25,7 @@ export function ReplayViewer({ replay, onClose }: { replay: ReplayData; onClose:
     let lastUi = 0;
     void Promise.all([
       import('../../game/replay/ReplayPlayer'),
-      import('../../game/objects/propModels').then((m) => m.preloadPropModels()),
-      import('../../game/maps/mapScenes').then((m) => m.preloadMapScenes()),
+      import('../../game/maps/mapAssets').then((m) => m.loadMapAssets(replay.mapId)),
     ])
       .then(([{ ReplayPlayer }]) => {
         if (disposed) return;

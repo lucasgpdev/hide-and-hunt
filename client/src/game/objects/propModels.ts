@@ -439,49 +439,72 @@ const REALISTIC: Record<string, RealisticModel> = {
 for (const p of SCENE_PROPS) REALISTIC[p.id] = { file: p.file };
 
 const templates = new Map<string, THREE.Object3D>();
-let preloading: Promise<void> | null = null;
+const loadingTypes = new Map<string, Promise<void>>();
+const failedTypes = new Set<string>();
 
-/** Carrega os modelos realistas uma vez (na tela de carregamento). Falhas usam o modelo por código. */
-export function preloadPropModels(): Promise<void> {
-  preloading ??= (async () => {
+/** Tipos que têm modelo realista em arquivo. */
+export function realisticPropTypes(): string[] {
+  return Object.keys(REALISTIC);
+}
+
+/**
+ * Carrega os modelos realistas dos tipos pedidos (todos, se nenhum for
+ * passado). Cada arquivo baixa uma vez só; falhas usam o modelo por código.
+ */
+export function preloadPropModels(types?: Iterable<string>): Promise<void> {
+  const wanted = [...(types ?? Object.keys(REALISTIC))].filter((t) => t in REALISTIC);
+  return Promise.all(wanted.map(loadPropModel)).then(() => undefined);
+}
+
+export function propModelsReady(types: Iterable<string>): boolean {
+  for (const t of types) if (t in REALISTIC && !templates.has(t) && !failedTypes.has(t)) return false;
+  return true;
+}
+
+function loadPropModel(typeId: string): Promise<void> {
+  let promise = loadingTypes.get(typeId);
+  if (promise) return promise;
+  const def = REALISTIC[typeId]!;
+  promise = (async () => {
     const { dequantize, sharedGltfLoader } = await import('../maps/mapScenes');
     const loader = await sharedGltfLoader();
-    await Promise.all(
-      Object.entries(REALISTIC).map(async ([typeId, def]) => {
-        const type = getPropType(typeId);
-        if (!type) return;
-        try {
-          const gltf = await loader.loadAsync(`/models/props/${def.file}`);
-          const scene = gltf.scene;
-          dequantize(scene);
-          if (def.keep) {
-            for (const child of [...scene.children]) if (!def.keep(child.name)) child.removeFromParent();
-          }
-          scene.updateMatrixWorld(true);
-          const box = new THREE.Box3().setFromObject(scene);
-          const size = box.getSize(new THREE.Vector3());
-          const [sx, sy, sz] = type.size;
-          // Mesma altura do catálogo, sem passar muito da base do colisor.
-          const scale = Math.min(sy / Math.max(size.y, 1e-3), (sx * 1.2) / Math.max(size.x, 1e-3), (sz * 1.2) / Math.max(size.z, 1e-3));
-          const center = box.getCenter(new THREE.Vector3());
-          scene.scale.setScalar(scale);
-          scene.position.set(-center.x * scale, -box.min.y * scale, -center.z * scale);
-          scene.traverse((child) => {
-            const mesh = child as THREE.Mesh;
-            if (!mesh.isMesh) return;
-            mesh.castShadow = true;
-            mesh.receiveShadow = true;
-          });
-          const holder = new THREE.Group();
-          holder.add(scene);
-          templates.set(typeId, holder);
-        } catch (error) {
-          console.warn(`Modelo realista de ${typeId} indisponível; usando o modelo simples.`, error);
-        }
-      }),
-    );
+    const type = getPropType(typeId);
+    if (!type) {
+      failedTypes.add(typeId);
+      return;
+    }
+    try {
+      const gltf = await loader.loadAsync(`/models/props/${def.file}`);
+      const scene = gltf.scene;
+      dequantize(scene);
+      if (def.keep) {
+        for (const child of [...scene.children]) if (!def.keep(child.name)) child.removeFromParent();
+      }
+      scene.updateMatrixWorld(true);
+      const box = new THREE.Box3().setFromObject(scene);
+      const size = box.getSize(new THREE.Vector3());
+      const [sx, sy, sz] = type.size;
+      // Mesma altura do catálogo, sem passar muito da base do colisor.
+      const scale = Math.min(sy / Math.max(size.y, 1e-3), (sx * 1.2) / Math.max(size.x, 1e-3), (sz * 1.2) / Math.max(size.z, 1e-3));
+      const center = box.getCenter(new THREE.Vector3());
+      scene.scale.setScalar(scale);
+      scene.position.set(-center.x * scale, -box.min.y * scale, -center.z * scale);
+      scene.traverse((child) => {
+        const mesh = child as THREE.Mesh;
+        if (!mesh.isMesh) return;
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+      });
+      const holder = new THREE.Group();
+      holder.add(scene);
+      templates.set(typeId, holder);
+    } catch (error) {
+      failedTypes.add(typeId);
+      console.warn(`Modelo realista de ${typeId} indisponível; usando o modelo simples.`, error);
+    }
   })();
-  return preloading;
+  loadingTypes.set(typeId, promise);
+  return promise;
 }
 
 /** Cria o modelo de um tipo de objeto (novo grupo a cada chamada). */

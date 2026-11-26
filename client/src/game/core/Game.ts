@@ -25,6 +25,7 @@ import { ThirdPersonCamera } from '../camera/ThirdPersonCamera';
 import { PlayerAvatar } from '../characters/PlayerAvatar';
 import { RemotePlayers } from '../characters/RemotePlayers';
 import { Effects } from '../effects/Effects';
+import { loadMapAssets, mapAssetsReady } from '../maps/mapAssets';
 import { MapView } from '../maps/MapView';
 import { installFastRaycast } from '../physics/fastRaycast';
 import { setMaxAnisotropy } from '../materials/textures';
@@ -97,12 +98,20 @@ export class Game {
   private captureReadyAt = 0;
   private aim: Aim | null = null;
   private frames = 0;
+  /** Resolução dinâmica: fração da resolução escolhida nas configurações. */
+  private resScale = 1;
+  private baseRatio = 1;
+  private perfFrames = 0;
+  private perfTime = 0;
+  private goodWindows = 0;
   private fpsTime = 0;
   private hudTime = 0;
   private time = 0;
   private lastFrame = 0;
   private lightning = 0;
   private disposed = false;
+  /** Mapa cujos arquivos ainda estão baixando antes da troca. */
+  private waitingMap: string | null = null;
   private readonly unsubscribers: (() => void)[] = [];
   private settings: GameSettings = settingsStore.get();
 
@@ -246,7 +255,20 @@ export class Game {
     this.room = room;
     this.me = room.players.find((p) => p.id === this.localId) ?? null;
 
-    if (!this.world || this.world.mapId !== room.mapId) this.buildWorld(room.mapId);
+    if (!this.world || this.world.mapId !== room.mapId) {
+      // Só troca de mapa com os arquivos dele baixados (normalmente já vieram em segundo plano).
+      if (this.world && !mapAssetsReady(room.mapId)) {
+        if (this.waitingMap !== room.mapId) {
+          this.waitingMap = room.mapId;
+          void loadMapAssets(room.mapId).then(() => {
+            this.waitingMap = null;
+            if (this.room && !this.disposed) this.setRoom(this.room);
+          });
+        }
+        return;
+      }
+      this.buildWorld(room.mapId);
+    }
 
     const changed = this.remotes.syncPlayers(room.players);
     for (const avatar of changed) {
@@ -465,12 +487,49 @@ export class Game {
 
     this.frames += 1;
     this.fpsTime += realDt;
+    this.adaptQuality(realDt);
     if (this.fpsTime >= 0.5) {
       hudStore.set({ fps: Math.round(this.frames / this.fpsTime) });
       this.frames = 0;
       this.fpsTime = 0;
     }
   };
+
+  /**
+   * A cada 2 s compara o FPS com a meta (60, ou o limite escolhido): abaixo de
+   * 75% dela reduz a resolução em passos; folgado por 4 s seguidos, devolve.
+   */
+  private adaptQuality(realDt: number): void {
+    if (!this.settings.autoQuality || realDt > 0.5) return;
+    this.perfFrames += 1;
+    this.perfTime += realDt;
+    if (this.perfTime < 2) return;
+    const fps = this.perfFrames / this.perfTime;
+    this.perfFrames = 0;
+    this.perfTime = 0;
+    const limit = this.settings.fpsLimit;
+    const target = limit > 0 ? Math.min(limit, 60) : 60;
+    let next = this.resScale;
+    if (fps < target * 0.75) {
+      next = Math.max(0.5, this.resScale - (fps < target * 0.5 ? 0.25 : 0.12));
+      this.goodWindows = 0;
+    } else if (fps > target * 0.93 && this.resScale < 1) {
+      this.goodWindows += 1;
+      if (this.goodWindows >= 2) {
+        next = Math.min(1, this.resScale + 0.1);
+        this.goodWindows = 0;
+      }
+    }
+    if (Math.abs(next - this.resScale) > 0.001) {
+      this.resScale = next;
+      this.applyResolution();
+    }
+  }
+
+  private applyResolution(): void {
+    this.renderer.setPixelRatio(Math.max(0.5, this.baseRatio * this.resScale));
+    this.resize();
+  }
 
   private update(dt: number): void {
     const world = this.world;
@@ -834,8 +893,9 @@ export class Game {
     const graphicsChanged = this.settings.graphics !== settings.graphics || this.settings.shadows !== settings.shadows;
     this.settings = settings;
     const dpr = window.devicePixelRatio || 1;
-    const ratio = settings.graphics === 'low' ? Math.min(dpr, 1) : settings.graphics === 'medium' ? Math.min(dpr, 1.5) : Math.min(dpr, 2);
-    this.renderer.setPixelRatio(ratio);
+    this.baseRatio = settings.graphics === 'low' ? Math.min(dpr, 1) : settings.graphics === 'medium' ? Math.min(dpr, 1.5) : Math.min(dpr, 2);
+    if (!settings.autoQuality) this.resScale = 1;
+    this.renderer.setPixelRatio(Math.max(0.5, this.baseRatio * this.resScale));
     this.camera.fov = settings.fov;
     this.camera.far = settings.renderDistance;
     this.camera.updateProjectionMatrix();

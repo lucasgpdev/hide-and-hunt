@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import type { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { sharedGltfLoader } from '../maps/mapScenes';
 import { loadQuaternius } from './quaternius';
 
 /**
@@ -26,26 +27,28 @@ const FILES: Record<CharacterModelId, string> = {
 const cache = new Map<CharacterModelId, CharacterAsset>();
 let loading: Promise<void> | null = null;
 
-/** Carrega todos os personagens uma vez (chamado na tela de carregamento). */
+/**
+ * Carrega os personagens uma vez (tela de carregamento). Os realistas
+ * (Quaternius) são os usados; Soldier/Xbot só baixam se eles falharem.
+ */
 export function preloadCharacters(): Promise<void> {
   loading ??= (async () => {
-    const loader = new GLTFLoader();
-    const realistic = loadQuaternius(loader);
-    await Promise.all(
-      (Object.keys(FILES) as CharacterModelId[]).map(async (id) => {
-        try {
-          const gltf = await loader.loadAsync(FILES[id]);
-          const box = new THREE.Box3().setFromObject(gltf.scene);
-          const height = box.max.y - box.min.y || 1.8;
-          cache.set(id, { scene: gltf.scene, animations: gltf.animations, scale: 1.8 / height });
-        } catch (error) {
-          console.warn(`Não foi possível carregar o personagem ${id}; usando o modelo simples.`, error);
-        }
-      }),
-    );
-    await realistic;
+    const loader = await sharedGltfLoader();
+    const [realistic] = await Promise.all([loadQuaternius(loader), loadModel(loader, 'robot')]);
+    if (!realistic) await Promise.all([loadModel(loader, 'soldier'), loadModel(loader, 'xbot')]);
   })();
   return loading;
+}
+
+async function loadModel(loader: GLTFLoader, id: CharacterModelId): Promise<void> {
+  try {
+    const gltf = await loader.loadAsync(FILES[id]);
+    const box = new THREE.Box3().setFromObject(gltf.scene);
+    const height = box.max.y - box.min.y || 1.8;
+    cache.set(id, { scene: gltf.scene, animations: gltf.animations, scale: 1.8 / height });
+  } catch (error) {
+    console.warn(`Não foi possível carregar o personagem ${id}; usando o modelo simples.`, error);
+  }
 }
 
 export function getCharacterAsset(id: CharacterModelId): CharacterAsset | undefined {

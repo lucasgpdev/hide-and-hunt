@@ -56,6 +56,8 @@ export interface MapScene {
   rotationY?: number;
   /** Escala uniforme. */
   scale?: number;
+  /** false: não projeta sombra do sol (cômodos cobertos, árvores do fundo). */
+  castShadow?: boolean;
   /** Intensidade da luz ambiente do céu (mapas com área externa). */
   hemisphere?: number;
 }

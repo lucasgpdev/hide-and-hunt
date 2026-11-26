@@ -45,7 +45,8 @@ for (const r of cfg.rooms) {
   fs.writeFileSync(file, JSON.stringify(roomCfg, null, 1));
   if (!cfg.skipRooms) {
     execSync(`node ${HERE}/pipeline.mjs ${file}`, { stdio: ['ignore', 'pipe', 'inherit'] });
-    execSync(`bash ${HERE}/compress.sh ${OUT}/${r.key}`, { stdio: 'ignore' });
+    const env = { ...process.env, ...(cfg.compress ?? {}), ...(r.compress ?? {}) };
+    execSync(`bash ${HERE}/compress.sh ${OUT}/${r.key}`, { stdio: 'ignore', env });
   }
   const map = JSON.parse(fs.readFileSync(`${OUT}/${r.key}/map.json`, 'utf8'));
   rooms.push({ ...r, base, map, ox, oz, floorY, H: map.wallHeight, world: [bx0 + ox, bz0 + oz, bx1 + ox, bz1 + oz] });
@@ -300,11 +301,11 @@ const ring = cfg.backdrop ?? [];
 if (ring.length) {
   for (const [ax0, az0, ax1, az1, ox, oz] of [[yx0, yz0, yx1, yz0, 0, -1], [yx0, yz1, yx1, yz1, 0, 1], [yx0, yz0, yx0, yz1, -1, 0], [yx1, yz0, yx1, yz1, 1, 0]]) {
     const len = Math.hypot(ax1 - ax0, az1 - az0);
-    for (let t = -4; t < len + 4; t += 3.2 + rnd() * 2.2) {
+    for (let t = -4; t < len + 4; t += (cfg.backdropSpacing ?? 6) + rnd() * 4) {
       const out = 3 + rnd() * 6;
       const x = ax0 + (ax1 - ax0) * (t / len) + ox * out, z = az0 + (az1 - az0) * (t / len) + oz * out;
       const file = ring[Math.floor(rnd() * ring.length)];
-      decor.push({ url: `/models/yard/${file}.glb`, offset: [x, 0, z], rotationY: r3(rnd() * Math.PI * 2), scale: r3(0.85 + rnd() * 0.5) });
+      decor.push({ url: `/models/yard/${file}.glb`, offset: [x, 0, z], rotationY: r3(rnd() * Math.PI * 2), scale: r3(0.85 + rnd() * 0.5), castShadow: false });
     }
   }
 }
@@ -330,13 +331,14 @@ for (const room of rooms) {
   if (!map.lights.length) { const [a, c] = T((room.world[0] + room.world[2]) / 2, (room.world[1] + room.world[3]) / 2); out.lights.push([a, r3(room.H - 0.4), c]); }
   const [a0, c0] = T(room.world[0], room.world[1]), [a1, c1] = T(room.world[2], room.world[3]);
   out.zones.push({ name: room.label, rect: [a0, c0, a1, c1], surface: room.surface ?? 'wood', covered: true });
-  out.scenes.push({ url: `/models/maps/${cfg.id}_${room.key}.glb`, offset: [r3(ox - cx), r3(-room.floorY), r3(oz - cz)] });
+  // cômodos não projetam sombra do sol: a casca externa e o telhado já fazem isso
+  out.scenes.push({ url: `/models/maps/${cfg.id}_${room.key}.glb`, offset: [r3(ox - cx), r3(-room.floorY), r3(oz - cz)], castShadow: false });
 }
 for (const [x0, z0, x1, z1, b, t] of solids) out.boxes.push([...T(x0, z0), ...T(x1, z1), r3(b), r3(t)]);
 for (const [type, x, z, yaw, y] of props) out.props.push([type, ...T(x, z), yaw, y]);
 for (const [x, z] of yardSpawns) out.hunters.push(T(x, z));
 for (const [x, z] of yardSpawns.slice(0, Math.ceil(yardSpawns.length / 2))) out.hiders.push(T(x, z));
-for (const d of decor) out.scenes.push({ url: d.url, offset: [r3(d.offset[0] - cx), 0, r3(d.offset[2] - cz)], rotationY: d.rotationY, ...(d.scale ? { scale: d.scale } : {}) });
+for (const d of decor) out.scenes.push({ url: d.url, offset: [r3(d.offset[0] - cx), 0, r3(d.offset[2] - cz)], rotationY: d.rotationY, ...(d.scale ? { scale: d.scale } : {}), ...(d.castShadow === false ? { castShadow: false } : {}) });
 out.zones.push({ name: cfg.yardName ?? 'Quintal', rect: [-YW / 2, -YD / 2, YW / 2, YD / 2], surface: cfg.yardSurface ?? 'grass' });
 out.zones.push({ name: 'Arredores', rect: [-YW / 2 - 40, -YD / 2 - 40, YW / 2 + 40, YD / 2 + 40], surface: cfg.outerSurface ?? 'grass' });
 out.exterior = { url: `/models/maps/${cfg.id}_exterior.glb`, offset: [r3(-cx), 0, r3(-cz)] };

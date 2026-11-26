@@ -109,6 +109,7 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
             </select>
           </label>
           <Toggle label="Sombras" checked={settings.shadows} onChange={(v) => set({ shadows: v })} />
+          <Toggle label="Ajuste automático (baixa a resolução se o FPS cair)" checked={settings.autoQuality} onChange={(v) => set({ autoQuality: v })} />
           <Slider label="Distância de renderização" value={settings.renderDistance} min={25} max={120} step={5} format={(v) => `${v} m`} onChange={(v) => set({ renderDistance: v })} />
           <Slider label="Campo de visão" value={settings.fov} min={55} max={100} step={1} format={(v) => `${v}°`} onChange={(v) => set({ fov: v })} />
           <Toggle label="Mostrar FPS e latência" checked={settings.showFps} onChange={(v) => set({ showFps: v })} />

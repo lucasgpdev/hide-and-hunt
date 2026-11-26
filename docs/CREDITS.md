@@ -57,7 +57,7 @@ Modelos de [Poly Haven](https://polyhaven.com) (licença **CC0**), reduzidos par
 
 ## Quintal e pátio (Poly Haven, CC0) — `client/public/models/yard/*.glb`, `client/public/models/props/yd_*.glb`
 
-Vegetação e objetos de [Poly Haven](https://polyhaven.com) (licença **CC0**) usados nas áreas externas da Casa Grande e da Escola: Fir Sapling Medium, Island Tree 02, Shrub 01/02/04, Tree Small 02 (variações separadas em arquivos próprios), Barrel 01, Garden Gnome, Painted Wooden Bench, Planter Box 01, Tree Stump 01, Watering Can Metal 01, Wooden Bucket 01 e Wooden Picnic Table. Texturas WebP de até 1024 px e geometria meshopt.
+Vegetação e objetos de [Poly Haven](https://polyhaven.com) (licença **CC0**) usados nas áreas externas da Casa Grande e da Escola: Island Tree 02, Shrub 01/02/04 e Tree Small 02 (variações separadas em arquivos próprios, com a copa afinada para pesar menos), Barrel 01, Garden Gnome, Painted Wooden Bench, Planter Box 01, Tree Stump 01, Watering Can Metal 01, Wooden Bucket 01 e Wooden Picnic Table. Texturas WebP de até 1024 px e geometria meshopt.
 
 Os cômodos desses mapas são os mesmos cenários listados acima (The White Room, Country Kitchen, The Grey & White Room, The Breakfast Room, Japanese Classroom e Classroom), recortados com portas e cercados por paredes externas, telhado e cerca gerados por script (`tools/scene-maps/compose.mjs`).
 

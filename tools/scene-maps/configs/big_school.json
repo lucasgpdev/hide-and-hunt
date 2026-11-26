@@ -48,6 +48,9 @@
       2.65
      ]
     ]
+   },
+   "compress": {
+    "TEX": "512"
    }
   },
   {
@@ -120,17 +123,10 @@
   },
   {
    "file": "tree_b",
-   "count": 3,
+   "count": 4,
    "radius": 1.6,
    "trunk": 0.3,
    "height": 4.4
-  },
-  {
-   "file": "fir_b",
-   "count": 2,
-   "radius": 1.9,
-   "trunk": 0.3,
-   "height": 7
   },
   {
    "file": "shrub_a",
@@ -264,10 +260,8 @@
  ],
  "yardSpawns": 16,
  "backdrop": [
-  "fir_a",
-  "fir_b",
-  "fir_c",
-  "tree_b"
+  "tree_b",
+  "tree_a"
  ],
  "meta": {
   "name": "Escola",
@@ -290,5 +284,9 @@
   "lightColor": "#f4f8ff",
   "lightIntensity": 0.16
  },
- "skipRooms": false
+ "skipRooms": true,
+ "compress": {
+  "ABS": "0.003"
+ },
+ "backdropSpacing": 10
 }

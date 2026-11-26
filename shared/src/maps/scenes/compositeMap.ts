@@ -23,7 +23,7 @@ export interface CompositeMapData {
   /** Cenário principal (paredes externas, telhado, cerca). */
   exterior: { url: string; offset: Vec3 };
   /** Cômodos e vegetação. */
-  scenes: { url: string; offset: Vec3; rotationY?: number; scale?: number }[];
+  scenes: { url: string; offset: Vec3; rotationY?: number; scale?: number; castShadow?: boolean }[];
   theme: MapDefinition['theme'];
   sunFrom: Vec3;
   sunIntensity: number;

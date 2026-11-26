@@ -37,3 +37,14 @@ num mapa só, com área externa:
 As portas ficam em coordenadas do mundo (antes de centralizar): `axis` é o eixo
 perpendicular à parede, `at` o intervalo atravessado e `range` a largura.
 Árvores, arbustos e objetos do quintal: Poly Haven (CC0).
+
+## Deixar leve
+
+- `ABS=0.003 bash compress.sh pasta`: simplifica o cenário por erro absoluto
+  (3 mm) com `simplify-abs.mjs` — alças, talheres e frutas perdem detalhes
+  invisíveis (cozinha: 595 mil → 78 mil triângulos). `TEX=512` reduz texturas.
+- `node simplify-abs.mjs entrada.glb saída.glb 0.0015 200`: o mesmo para objetos.
+- `node leafthin.mjs árvore.glb saída.glb 0.45 1.25`: mantém 45% dos cartões de
+  folhas e aumenta 25% os que ficam.
+- `node mopt.mjs entrada.glb saída.glb`: meshopt sem quantizar (personagens com
+  esqueleto e animações).
