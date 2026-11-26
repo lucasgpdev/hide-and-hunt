@@ -64,4 +64,6 @@ export const MAP_ENVIRONMENT: Record<string, [EnvironmentName, number]> = {
   white_room: ['apartment', 0.28],
   grey_room: ['apartment', 0.34],
   breakfast_room: ['apartment', 0.34],
+  big_house: ['apartment', 0.32],
+  big_school: ['apartment', 0.3],
 };

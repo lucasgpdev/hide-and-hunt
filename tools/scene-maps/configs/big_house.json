@@ -1,0 +1,329 @@
+{
+ "id": "big_house",
+ "out": "/tmp/mapout/house",
+ "yard": [
+  36,
+  36
+ ],
+ "wallHeight": 4.5,
+ "rooms": [
+  {
+   "key": "lr2",
+   "cfg": "/tmp/mapcfg/lr2.json",
+   "offset": [
+    0,
+    0
+   ],
+   "label": "Sala Branca",
+   "surface": "wood"
+  },
+  {
+   "key": "kitchen",
+   "cfg": "/tmp/mapcfg/kitchen.json",
+   "offset": [
+    6.48,
+    2.97
+   ],
+   "label": "Cozinha",
+   "surface": "tiles"
+  },
+  {
+   "key": "lr",
+   "cfg": "/tmp/mapcfg/lr.json",
+   "offset": [
+    -2.07,
+    12.7
+   ],
+   "label": "Sala Cinza",
+   "surface": "wood"
+  },
+  {
+   "key": "br",
+   "cfg": "/tmp/mapcfg/br.json",
+   "offset": [
+    6.03,
+    10.4
+   ],
+   "label": "Copa",
+   "surface": "wood"
+  }
+ ],
+ "doors": [
+  {
+   "axis": "x",
+   "at": [
+    3.0,
+    4.0
+   ],
+   "range": [
+    5.77,
+    7.17
+   ]
+  },
+  {
+   "axis": "z",
+   "at": [
+    8.1,
+    9.1
+   ],
+   "range": [
+    1.2,
+    2.6
+   ]
+  },
+  {
+   "axis": "z",
+   "at": [
+    7.92,
+    8.92
+   ],
+   "range": [
+    6.4,
+    7.6
+   ]
+  },
+  {
+   "axis": "x",
+   "at": [
+    2.98,
+    3.98
+   ],
+   "range": [
+    10.7,
+    12.1
+   ]
+  },
+  {
+   "axis": "x",
+   "at": [
+    9.93,
+    10.53
+   ],
+   "range": [
+    2.8,
+    4.2
+   ],
+   "exterior": true
+  },
+  {
+   "axis": "x",
+   "at": [
+    -3.02,
+    -2.42
+   ],
+   "range": [
+    4.3,
+    5.7
+   ],
+   "exterior": true
+  },
+  {
+   "axis": "z",
+   "at": [
+    -0.1,
+    0.5
+   ],
+   "range": [
+    8.18,
+    9.58
+   ],
+   "exterior": true
+  }
+ ],
+ "trees": [
+  {
+   "file": "fir_a",
+   "count": 3,
+   "radius": 2.2,
+   "trunk": 0.35,
+   "height": 8
+  },
+  {
+   "file": "fir_b",
+   "count": 3,
+   "radius": 1.9,
+   "trunk": 0.3,
+   "height": 7
+  },
+  {
+   "file": "fir_c",
+   "count": 2,
+   "radius": 1.9,
+   "trunk": 0.3,
+   "height": 5.5
+  },
+  {
+   "file": "tree_a",
+   "count": 3,
+   "radius": 1.8,
+   "trunk": 0.3,
+   "height": 3.2
+  },
+  {
+   "file": "tree_b",
+   "count": 2,
+   "radius": 1.6,
+   "trunk": 0.3,
+   "height": 4.4
+  },
+  {
+   "file": "shrub_a",
+   "count": 4,
+   "radius": 0.8,
+   "trunk": 0.5,
+   "height": 1.6
+  },
+  {
+   "file": "shrub_b",
+   "count": 4,
+   "radius": 0.65,
+   "trunk": 0.4,
+   "height": 1.4
+  },
+  {
+   "file": "shrub_c",
+   "count": 3,
+   "radius": 1.0,
+   "trunk": 0.7,
+   "height": 1.25
+  },
+  {
+   "file": "shrub_d",
+   "count": 4,
+   "radius": 0.55,
+   "trunk": 0.38,
+   "height": 1.15
+  }
+ ],
+ "yardProps": [
+  {
+   "type": "garden_gnome",
+   "size": [
+    0.26,
+    0.6,
+    0.21
+   ],
+   "count": 4
+  },
+  {
+   "type": "wooden_bucket",
+   "size": [
+    0.37,
+    0.55,
+    0.34
+   ],
+   "count": 3
+  },
+  {
+   "type": "watering_can",
+   "size": [
+    0.19,
+    0.2,
+    0.45
+   ],
+   "count": 3
+  },
+  {
+   "type": "barrel",
+   "size": [
+    0.56,
+    0.88,
+    0.56
+   ],
+   "count": 4
+  },
+  {
+   "type": "planter_box",
+   "size": [
+    0.91,
+    0.43,
+    0.41
+   ],
+   "count": 3
+  },
+  {
+   "type": "garden_bench",
+   "size": [
+    1.17,
+    0.89,
+    0.5
+   ],
+   "count": 2
+  },
+  {
+   "type": "picnic_table",
+   "size": [
+    2.24,
+    0.75,
+    3.02
+   ],
+   "count": 1
+  },
+  {
+   "type": "tree_stump",
+   "size": [
+    1.43,
+    0.57,
+    1.59
+   ],
+   "count": 2
+  },
+  {
+   "type": "wooden_crate",
+   "size": [
+    0.6,
+    0.6,
+    0.6
+   ],
+   "count": 3
+  },
+  {
+   "type": "plastic_chair",
+   "size": [
+    0.55,
+    0.85,
+    0.55
+   ],
+   "count": 3
+  },
+  {
+   "type": "box",
+   "size": [
+    0.6,
+    0.6,
+    0.6
+   ],
+   "count": 3
+  }
+ ],
+ "yardSpawns": 16,
+ "skipRooms": false,
+ "root": "/home/claude/HIDE-AND-HUNT",
+ "backdrop": [
+  "fir_a",
+  "fir_b",
+  "fir_c",
+  "tree_b"
+ ],
+ "meta": {
+  "name": "Casa Grande",
+  "description": "Casa com sala branca, sala cinza, cozinha e copa ligadas por portas, e um quintal enorme com \u00e1rvores, cercado.",
+  "source": "C\u00f4modos: The White Room e Country Kitchen (Jay-Artist), The Grey & White Room e The Breakfast Room (Wig42), CC-BY 3.0; quintal: Poly Haven (CC0).",
+  "theme": {
+   "background": "#cfe0ee",
+   "floor": "#5f7a3a",
+   "wall": "#efe7da",
+   "ambient": "#fff4e6",
+   "fog": "#cfe0ee"
+  },
+  "sunFrom": [
+   0.6,
+   1.6,
+   -0.9
+  ],
+  "sunIntensity": 2.2,
+  "sky": "noon_grass",
+  "lightColor": "#ffe7c4",
+  "lightIntensity": 0.18
+ }
+}

@@ -218,11 +218,11 @@ describe('Room — votação e reconexão', () => {
     ctx.add('ana');
     ctx.add('bia');
     ctx.add('caio');
-    ctx.room.vote('ana', 'jp_classroom');
-    ctx.room.vote('bia', 'jp_classroom');
-    ctx.room.vote('caio', 'grey_room');
+    ctx.room.vote('ana', 'big_school');
+    ctx.room.vote('bia', 'big_school');
+    ctx.room.vote('caio', 'big_house');
     ctx.room.start('ana');
-    expect(ctx.room.mapId).toBe('jp_classroom');
+    expect(ctx.room.mapId).toBe('big_school');
   });
 
   it('mantém o jogador durante o tempo de reconexão e remove depois', () => {

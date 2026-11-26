@@ -273,6 +273,31 @@ export function fabricTexture(base: string, seed = 6): TextureSet {
   }, seed);
 }
 
+/** Gramado: manchas claras/escuras, fiapos de grama e um pouco de terra. */
+export function grassTexture(base: string, seed = 25): TextureSet {
+  return build(`grass:${base}`, (ctx, height, rough, rand) => {
+    const patches = fbm(rand, 4, 3);
+    const blades = makeNoise(rand, 160);
+    const fine = makeNoise(rand, 60);
+    const [r, g, b] = hexToRgb(base);
+    paint(ctx, (u, v, i) => {
+      const p = patches(u, v);
+      const bl = blades(u, v * 0.35);
+      const f = fine(u, v);
+      const dirt = p < 0.3 ? (0.3 - p) * 2.2 : 0;
+      const d = (p - 0.5) * 34 + (bl - 0.5) * 38 + (f - 0.5) * 12;
+      height[i] = 0.35 + bl * 0.5;
+      rough[i] = 0.95;
+      const yellow = Math.max(0, p - 0.62) * 70;
+      return [
+        clamp(r + d + yellow + dirt * 40),
+        clamp(g + d + yellow * 0.6 - dirt * 10),
+        clamp(b + d * 0.6 - yellow * 0.4 + dirt * 10),
+      ];
+    });
+  }, seed);
+}
+
 /** Papelão ondulado com fita. */
 export function cardboardTexture(seed = 7): TextureSet {
   return build('cardboard', (ctx, height, rough, rand) => {

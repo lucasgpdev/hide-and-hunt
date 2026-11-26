@@ -59,6 +59,8 @@ const SAMPLES = {
   step_wood: 5,
   step_carpet: 5,
   step_tile: 5,
+  step_grass: 5,
+  step_concrete: 5,
   punch: 3,
   soft: 3,
   wood: 3,
@@ -113,7 +115,7 @@ function sample(group: SampleGroup, volume = 0.5, pitchJitter = 0.08, delay = 0)
 }
 
 /** Piso → som de passo. */
-export type StepSurface = 'wood' | 'carpet' | 'tile';
+export type StepSurface = 'wood' | 'carpet' | 'tile' | 'grass' | 'concrete';
 
 /**
  * Passo de um personagem num ponto do mapa (com posição 3D: dá para ouvir de

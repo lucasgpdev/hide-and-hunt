@@ -1,0 +1,9 @@
+{"src": "/tmp/maps/classroom2.glb", "out": "/tmp/mapout/cc", "scale": 1, "floorY": 0.0,
+ "bounds": [-5.62, -3.52, 3.74, 4.75], "wallHeight": 3.0,
+ "props": [
+  {"id": "cc_desk", "name": "Carteira antiga", "include": "^chair(\\.\\d+)?__", "height": [0.6, 1.1], "maxFoot": 1.3},
+  {"id": "cc_leather_chair", "name": "Poltrona de couro", "include": "^leatherChair", "height": [0.6, 1.3], "maxFoot": 1.2},
+  {"id": "cc_bin", "name": "Cesto de lixo", "include": "^dustBin", "height": [0.2, 0.6], "maxFoot": 0.6}
+ ],
+ "autoExtras": [{"type": "book_stack", "count": 1, "size": [0.5, 0.24, 0.16]}, {"type": "wooden_crate", "count": 1, "size": [0.75, 0.35, 0.38]}, {"type": "plant_pot", "count": 1, "size": [0.5, 1.1, 0.5]}]
+}

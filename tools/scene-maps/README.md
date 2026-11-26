@@ -17,3 +17,23 @@ Ferramentas usadas para transformar as cenas do repositório
 Os caminhos em `configs/` apontam para onde as cenas foram baixadas
 (`git lfs` ou `media.githubusercontent.com`). Precisa de
 `@gltf-transform/cli`, `@gltf-transform/core|extensions|functions` e `sharp`.
+
+## Mapas abertos (Casa Grande, Escola)
+
+`compose.mjs configs/big_house.json` (ou `big_school.json`) junta vários cômodos
+num mapa só, com área externa:
+
+- roda o `pipeline.mjs` em cada cômodo com `cuts` (recorta as portas nas paredes
+  do cenário), `clip` (descarta o que fica fora do cômodo, como pisos infinitos e
+  corredores do cenário original), `keepClear` (sem objetos na frente das portas)
+  e sem a caixa de contorno;
+- gera a casca externa (`<id>_exterior.glb`): paredes com janelas onde o cenário
+  tem aberturas (relatório `sides` do `map.json`, ou `holes` manual por cômodo),
+  telhado com beiral, batentes e piso das passagens e a cerca do quintal;
+- espalha árvores e arbustos (cenários extras, só o tronco tem colisão), objetos
+  do quintal e pontos de nascimento por amostragem do ponto mais distante;
+- escreve `shared/src/maps/scenes/<id>.ts` (`compositeMap`) e copia os modelos.
+
+As portas ficam em coordenadas do mundo (antes de centralizar): `axis` é o eixo
+perpendicular à parede, `at` o intervalo atravessado e `range` a largura.
+Árvores, arbustos e objetos do quintal: Poly Haven (CC0).

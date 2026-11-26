@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { getPropType, type DoorDef, type FloorSurface, type MapDefinition, type Solid } from '@hh/shared';
+import { getPropType, type DoorDef, type FloorSurface, type MapDefinition, type MapScene, type Solid } from '@hh/shared';
 import type { GameSettings } from '../../settings/settings';
 import { pbr, worldBox, type MaterialKey } from '../materials/library';
 import { createPropModel } from '../objects/propModels';
@@ -59,6 +59,9 @@ export class MapView {
   private readonly owned: { dispose(): void }[] = [];
   readonly sun: THREE.DirectionalLight;
   readonly hemisphere: THREE.HemisphereLight;
+  /** Intensidades de referência (o ciclo de luz da partida multiplica estes valores). */
+  readonly baseHemisphere: number;
+  readonly baseSun: number;
   /** Objetos empurráveis (desenhados à parte para poderem se mover). */
   readonly pushables = new Map<string, { model: THREE.Object3D; proxy: THREE.Object3D; height: number }>();
   /** Portas: pivô (dobradiça), definição e quanto está aberta (0..1). */
@@ -84,9 +87,19 @@ export class MapView {
         staticRoot.add(this.floor(x1 - x0, z1 - z0, (x0 + x1) / 2, (z0 + z1) / 2, SURFACES[zone.surface ?? 'tiles'], 0.002 + index * 0.0004));
       });
     } else {
-      const ready = cachedMapScene(scene.url);
-      if (ready) this.addScene(ready);
-      else void loadMapScene(scene.url).then((loaded) => loaded && !this.disposed && this.addScene(loaded));
+      for (const def of [scene, ...(map.extraScenes ?? [])]) {
+        const ready = cachedMapScene(def.url);
+        if (ready) this.addScene(ready, def);
+        else void loadMapScene(def.url).then((loaded) => loaded && !this.disposed && this.addScene(loaded, def));
+      }
+      // Áreas abertas (quintal, pátio) ganham piso gerado; os cômodos já trazem o seu.
+      // Zonas maiores ficam por baixo (o pátio aparece sobre o gramado em volta).
+      const open = map.zones.filter((zone) => !zone.covered);
+      const area = (z: (typeof open)[number]) => (z.rect[2] - z.rect[0]) * (z.rect[3] - z.rect[1]);
+      [...open].sort((a, b) => area(b) - area(a)).forEach((zone, rank) => {
+        const [x0, z0, x1, z1] = zone.rect;
+        staticRoot.add(this.floor(x1 - x0, z1 - z0, (x0 + x1) / 2, (z0 + z1) / 2, SURFACES[zone.surface ?? 'grass'], -0.03 + rank * 0.004));
+      });
     }
 
     // Teto com placas de forro (mapas abertos, como a cidade, não têm teto).
@@ -157,13 +170,15 @@ export class MapView {
     this.proxies.updateMatrixWorld(true);
 
     // Mapas abertos são noturnos: luar azulado no lugar da luz de janela.
-    this.hemisphere = new THREE.HemisphereLight(map.outdoor ? '#5d6f9c' : '#dfe6ff', '#3a342c', map.outdoor ? 0.25 : scene ? 0.15 : 0.35);
+    this.baseHemisphere = map.outdoor ? 0.35 : scene?.hemisphere ?? 0.35;
+    this.baseSun = scene?.sunIntensity ?? 1.6;
+    this.hemisphere = new THREE.HemisphereLight(map.outdoor ? '#5d6f9c' : '#dfe6ff', '#3a342c', map.outdoor ? 0.25 : scene ? (scene.hemisphere ?? 0.15) : 0.35);
     this.root.add(this.hemisphere);
     this.sun = new THREE.DirectionalLight(map.outdoor ? '#a9bcff' : '#fff3df', scene?.sunIntensity ?? (map.outdoor ? 0.7 : 1.6));
     if (scene?.sunFrom) {
       // Sol baixo entrando pelas janelas (sombras das persianas no chão).
       const dir = new THREE.Vector3(...scene.sunFrom).normalize();
-      this.sun.position.copy(dir.multiplyScalar(14));
+      this.sun.position.copy(dir.multiplyScalar(Math.max(14, Math.max(w, d) / 2 + 12)));
       this.sun.color.set('#ffe6c2');
     } else {
       this.sun.position.set(w * 0.15, map.wallHeight + 14, d * 0.2);
@@ -178,7 +193,7 @@ export class MapView {
     cam.top = extent;
     cam.bottom = -extent;
     cam.near = 1;
-    cam.far = map.wallHeight + 40;
+    cam.far = map.wallHeight + 40 + Math.max(w, d);
     this.sun.shadow.bias = -0.0004;
     this.sun.shadow.normalBias = 0.025;
     this.sun.shadow.radius = 3;
@@ -287,11 +302,11 @@ export class MapView {
   }
 
   /** Cenário 3D pronto: clonado (compartilha geometria/texturas) e alinhado ao mapa. */
-  private addScene(template: THREE.Object3D): void {
-    const scene = this.map.scene;
-    if (!scene) return;
+  private addScene(template: THREE.Object3D, scene: MapScene): void {
     const clone = template.clone(true);
     clone.position.set(...scene.offset);
+    if (scene.rotationY) clone.rotation.y = scene.rotationY;
+    if (scene.scale) clone.scale.setScalar(scene.scale);
     clone.updateMatrixWorld(true);
     const world = new THREE.Vector3();
     clone.traverse((child) => {

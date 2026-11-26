@@ -11,7 +11,7 @@ const DEFAULTS: RoomSettings = {
   hidingSeconds: DEFAULT_MATCH_TIMINGS.hidingSeconds,
   huntingSeconds: DEFAULT_MATCH_TIMINGS.huntingSeconds,
   intermissionSeconds: DEFAULT_MATCH_TIMINGS.intermissionSeconds,
-  mapId: 'classic_classroom',
+  mapId: 'big_house',
   mapVoting: true,
   mode: 'custom',
   randomEvents: true,

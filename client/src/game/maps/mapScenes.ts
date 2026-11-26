@@ -57,8 +57,9 @@ export function loadMapScene(url: string): Promise<THREE.Object3D | null> {
 export async function preloadMapScenes(): Promise<void> {
   const urls = new Set<string>();
   for (const entry of MAP_CATALOG) {
-    const scene = entry.available ? getMap(entry.id)?.scene : undefined;
-    if (scene) urls.add(scene.url);
+    const map = entry.available ? getMap(entry.id) : undefined;
+    if (map?.scene) urls.add(map.scene.url);
+    for (const extra of map?.extraScenes ?? []) urls.add(extra.url);
   }
   await Promise.all([...urls].map((url) => loadMapScene(url)));
 }

@@ -9,7 +9,7 @@ Jogo multiplayer 3D de Prop Hunt para navegador. Os escondidos se transformam em
 **Partidas**
 - **Fila pública** com escolha de modo, ou **sala privada** com código de 6 letras e regras próprias.
 - **8 modos**: Clássico, Infecção (capturado vira caçador), Caçador solitário, Duplas, Caos (recargas curtas, eventos frequentes), Sobrevivência, Competitivo (pontuação Elo) e Personalizado.
-- **6 mapas realistas** feitos a partir de cenas 3D do GitHub (CC0/CC-BY): Sala de Aula Clássica, Sala de Aula Japonesa, Cozinha Rústica, Sala Branca, Sala Cinza e Sala de Café da Manhã. Os objetos da própria cena (carteiras, cadeiras, poltronas, almofadas, plantas) viram esconderijos. Os 11 mapas antigos, feitos por código, continuam no projeto fora da rotação.
+- **2 mapas abertos e realistas**, montados com cenas 3D do GitHub (CC0/CC-BY): **Casa Grande** (sala branca, sala cinza, cozinha e copa ligadas por portas, com um quintal enorme cercado, árvores, bancos, barris e anões de jardim) e **Escola** (sala de aula antiga com corredor, sala japonesa e um pátio grande cercado, com mesas de piquenique e bancos). Dá para andar à vontade por dentro e por fora; a cerca é o limite. Os objetos das cenas (carteiras, cadeiras, poltronas, almofadas, plantas) e do quintal viram esconderijos. Os cômodos isolados e os 11 mapas antigos, feitos por código, continuam no projeto fora da rotação.
 - **Lobby 3D**: enquanto a sala espera, todos andam por um saguão com palco, fazem emotes e votam no próximo mapa.
 - **Espectador** depois de capturado, **resultados** com destaques e **replay 3D** da partida (câmera cinematográfica, livre ou seguindo um jogador; velocidade 0,5× a 4×).
 

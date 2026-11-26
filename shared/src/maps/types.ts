@@ -52,6 +52,12 @@ export interface MapScene {
   sunIntensity?: number;
   /** Panorama visto pelas janelas (arquivo em client/public/sky). */
   sky?: string;
+  /** Giro em torno do eixo vertical (cenários extras, como árvores). */
+  rotationY?: number;
+  /** Escala uniforme. */
+  scale?: number;
+  /** Intensidade da luz ambiente do céu (mapas com área externa). */
+  hemisphere?: number;
 }
 
 /** Objeto do cenário em que é possível se transformar. */
@@ -73,6 +79,8 @@ export interface MapZone {
   rect: [number, number, number, number];
   floorColor: string;
   surface?: FloorSurface;
+  /** Já tem piso e teto no cenário 3D (cômodo); zonas abertas ganham piso gerado. */
+  covered?: boolean;
 }
 
 export interface MapLight {
@@ -122,6 +130,8 @@ export interface MapDefinition {
   spawns: { hiders: Vec3[]; hunters: Vec3[] };
   /** Cenário 3D pronto; as estruturas do mapa viram só colisão invisível. */
   scene?: MapScene;
+  /** Outros cenários 3D do mapa (cômodos, árvores, arbustos), desenhados junto. */
+  extraScenes?: MapScene[];
   /** Mapa aberto (sem teto), como a cidade. */
   outdoor?: boolean;
   /** Mapa usado só como lobby (não entra na votação). */

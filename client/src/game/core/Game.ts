@@ -141,7 +141,8 @@ export class Game {
       if (!map) return;
       const zone = map.zones.find(({ rect: [x0, z0, x1, z1] }) => position.x >= x0 && position.x <= x1 && position.z >= z0 && position.z <= z1);
       const floor = zone?.surface ?? 'tiles';
-      const surface: StepSurface = floor === 'wood' ? 'wood' : floor === 'carpet' ? 'carpet' : 'tile';
+      const surface: StepSurface =
+        floor === 'wood' ? 'wood' : floor === 'carpet' ? 'carpet' : floor === 'grass' ? 'grass' : floor === 'concrete' || floor === 'asphalt' ? 'concrete' : 'tile';
       playFootstep(surface, [position.x, position.y, position.z], speed, playerId === localId);
     };
     setAmbience(true, () => [this.camera.position.x, this.camera.position.y, this.camera.position.z]);
@@ -319,7 +320,7 @@ export class Game {
         if (this.world?.mapId !== mapId || this.disposed) return;
         this.scene.environment = env;
         // Mapas abertos mostram o céu do HDRI ao fundo.
-        if (map.outdoor) {
+        if (map.outdoor && !map.scene?.sky) {
           this.scene.background = env;
           this.scene.backgroundIntensity = 0.35;
           this.scene.backgroundBlurriness = 0.15;
@@ -566,8 +567,8 @@ export class Game {
     this.lightning = Math.max(0, this.lightning - dt * 3);
     world.view.setLighting(factor, new Set(room.lightsOff));
     const ambient = room.state === 'WAITING' ? 1 : preset.factor;
-    world.view.hemisphere.intensity = (active === 'blackout' ? 0.05 : 0.35 * ambient) + this.lightning * 2.5;
-    world.view.sun.intensity = active === 'blackout' ? 0.05 : 1.6 * ambient;
+    world.view.hemisphere.intensity = (active === 'blackout' ? 0.05 : world.view.baseHemisphere * ambient) + this.lightning * 2.5;
+    world.view.sun.intensity = active === 'blackout' ? 0.05 : world.view.baseSun * ambient;
     world.view.hemisphere.color.set(active === 'alarm' && Math.sin(this.time * 10) > 0 ? '#ff3b3b' : '#dfe6ff');
     this.scene.environmentIntensity = this.baseEnvIntensity * (active === 'blackout' ? 0.08 : ambient) + this.lightning;
     this.renderer.toneMappingExposure = room.state === 'WAITING' ? 1 : preset.exposure;

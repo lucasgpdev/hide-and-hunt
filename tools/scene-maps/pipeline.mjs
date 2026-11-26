@@ -15,6 +15,72 @@ const io = new NodeIO().registerExtensions(ALL_EXTENSIONS);
 const OUT = cfg.out;
 fs.mkdirSync(OUT, { recursive: true });
 
+
+// ---------- cortes (portas): subtrai caixas da geometria ----------
+// Para cada triângulo que cruza uma caixa, mantém só as partes de fora
+// (recorte sucessivo pelos 6 planos) e interpola todos os atributos.
+function cutBoxes(doc, boxes) {
+  if (!boxes.length) return;
+  for (const mesh of doc.getRoot().listMeshes()) {
+    for (const prim of mesh.listPrimitives()) {
+      if (prim.getMode() !== 4) continue;
+      const posAcc = prim.getAttribute('POSITION');
+      const pos = posAcc.getArray();
+      const count = posAcc.getCount();
+      // caixa da primitiva: pula se não cruza nenhum corte
+      let mn = [Infinity, Infinity, Infinity], mx = [-Infinity, -Infinity, -Infinity];
+      for (let i = 0; i < count; i++) for (let a = 0; a < 3; a++) { const v = pos[i * 3 + a]; if (v < mn[a]) mn[a] = v; if (v > mx[a]) mx[a] = v; }
+      const hits = boxes.filter((b) => mn[0] < b[3] && mx[0] > b[0] && mn[1] < b[4] && mx[1] > b[1] && mn[2] < b[5] && mx[2] > b[2]);
+      if (!hits.length) continue;
+      const semantics = prim.listSemantics();
+      const attrs = semantics.map((sem) => { const acc = prim.getAttribute(sem); return { sem, acc, size: acc.getElementSize(), data: Array.from(acc.getArray()) }; });
+      let nVert = count;
+      const lerp = (i, j, t) => {
+        for (const at of attrs) for (let c = 0; c < at.size; c++) at.data.push(at.data[i * at.size + c] * (1 - t) + at.data[j * at.size + c] * t);
+        return nVert++;
+      };
+      const P = (i, a) => attrs[0].sem === 'POSITION' ? attrs[0].data[i * 3 + a] : attrs.find((x) => x.sem === 'POSITION').data[i * 3 + a];
+      const split = (poly, axis, value, keepLess) => {
+        // devolve [parte do lado "keep", resto]
+        const keep = [], rest = [];
+        for (let k = 0; k < poly.length; k++) {
+          const a = poly[k], b = poly[(k + 1) % poly.length];
+          const da = P(a, axis) - value, db = P(b, axis) - value;
+          const ina = keepLess ? da < 0 : da > 0, inb = keepLess ? db < 0 : db > 0;
+          if (ina) keep.push(a); else rest.push(a);
+          if (ina !== inb && Math.abs(da - db) > 1e-12) { const t = da / (da - db); if (t > 1e-6 && t < 1 - 1e-6) { const v = lerp(a, b, t); keep.push(v); rest.push(v); } }
+        }
+        return [keep.length >= 3 ? keep : null, rest.length >= 3 ? rest : null];
+      };
+      const idx = prim.getIndices().getArray();
+      const out = [];
+      for (let t = 0; t < idx.length / 3; t++) {
+        let pieces = [[idx[t * 3], idx[t * 3 + 1], idx[t * 3 + 2]]];
+        for (const b of hits) {
+          const next = [];
+          for (const poly of pieces) {
+            let rest = poly;
+            for (const [axis, value, less] of [[0, b[0], true], [0, b[3], false], [1, b[1], true], [1, b[4], false], [2, b[2], true], [2, b[5], false]]) {
+              if (!rest) break;
+              const [keep, r] = split(rest, axis, value, less);
+              if (keep) next.push(keep);
+              rest = r;
+            }
+            // o que sobrou está dentro da caixa: descartado
+          }
+          pieces = next;
+        }
+        for (const poly of pieces) for (let k = 1; k < poly.length - 1; k++) out.push(poly[0], poly[k], poly[k + 1]);
+      }
+      for (const at of attrs) {
+        const Ctor = at.acc.getArray().constructor;
+        at.acc.setArray(new Ctor(at.data));
+      }
+      prim.setIndices(doc.createAccessor().setType('SCALAR').setArray(new Uint32Array(out)).setBuffer(doc.getRoot().listBuffers()[0]));
+    }
+  }
+}
+
 // ---------- carregar e assar transformações ----------
 async function loadBaked() {
   const doc = await io.read(cfg.src);
@@ -55,6 +121,13 @@ async function loadBaked() {
 }
 
 const doc = await loadBaked();
+const outside = [];
+if (cfg.clip != null) {
+  // descarta o que fica fora do cômodo (pisos infinitos, corredores, jardins do cenário original)
+  const [bx0, bz0, bx1, bz1] = cfg.bounds, m = cfg.clip, F = 1e4;
+  outside.push([-F, -F, -F, bx0 - m, F, F], [bx1 + m, -F, -F, F, F, F], [-F, -F, -F, F, F, bz0 - m], [-F, -F, bz1 + m, F, F, F]);
+}
+cutBoxes(doc, [...(cfg.cuts ?? []), ...outside]);
 const root = doc.getRoot();
 const prims = []; // { node, prim, pos: Float32Array, idx: Uint32Array, name }
 for (const n of root.listNodes()) {
@@ -307,7 +380,7 @@ for (let gz = 0; gz < GZ; gz++) for (let gx = 0; gx < GX; gx++) {
   boxes.push([bx0 + gx * RES, bz0 + gz * RES, bx0 + (gx + w) * RES, bz0 + (gz + h) * RES, b, t]);
 }
 // paredes de contorno (fora dos limites)
-boxes.push([bx0 - 0.3, bz0 - 0.3, bx1 + 0.3, bz0, 0, H], [bx0 - 0.3, bz1, bx1 + 0.3, bz1 + 0.3, 0, H], [bx0 - 0.3, bz0, bx0, bz1, 0, H], [bx1, bz0, bx1 + 0.3, bz1, 0, H]);
+if (cfg.contour !== false) boxes.push([bx0 - 0.3, bz0 - 0.3, bx1 + 0.3, bz0, 0, H], [bx0 - 0.3, bz1, bx1 + 0.3, bz1 + 0.3, 0, H], [bx0 - 0.3, bz0, bx0, bz1, 0, H], [bx1, bz0, bx1 + 0.3, bz1, 0, H]);
 
 // ---------- nascimentos: células livres alcançáveis ----------
 const R = Math.ceil(0.42 / RES);
@@ -317,6 +390,10 @@ for (let k = 0; k < GX * GZ; k++) {
   const c = cellBox(k);
   if (c[0] > 1.9) continue; // só acima da cabeça
   blocked[k] = 1;
+}
+// áreas que devem ficar livres (passagem das portas): sem objetos nem nascimentos
+for (const [x0, z0, x1, z1] of cfg.keepClear ?? []) {
+  for (let gz = Math.floor((z0 - bz0) / RES); gz <= Math.floor((z1 - bz0) / RES); gz++) for (let gx = Math.floor((x0 - bx0) / RES); gx <= Math.floor((x1 - bx0) / RES); gx++) if (gx >= 0 && gz >= 0 && gx < GX && gz < GZ) blocked[gz * GX + gx] = 1;
 }
 // objetos extras (do catálogo) também bloqueiam
 for (const ex of cfg.extras ?? []) {
@@ -426,7 +503,103 @@ for (const e of prims) {
   }
 }
 
+// ---------- relatório das paredes: trechos livres por dentro e janelas ----------
+const sides = {};
+{
+  const winRe = new RegExp(cfg.windows ?? '(Window|Glass|Blind|Curtain)', 'i');
+  const wins = [];
+  for (const e of prims) if (winRe.test(e.name)) for (const c of components(e)) wins.push(c);
+  const defs = { xmin: [2, bx0, 0], xmax: [2, bx1, 0], zmin: [0, bz0, 2], zmax: [0, bz1, 2] };
+  for (const [name, [along, line]] of Object.entries(defs)) {
+    const n = along === 0 ? GX : GZ;
+    const freeBits = [];
+    for (let i = 0; i < n; i++) {
+      // a partir da parede, pula até 0,5 m de parede/rodapé e exige 0,9 m livres para dentro
+      let ok = false;
+      for (let skip = 0; skip <= 5 && !ok; skip++) {
+        let clear = true;
+        for (let d = skip; d < skip + 9 && clear; d++) {
+          let gx, gz;
+          if (name === 'xmin') { gx = d; gz = i; } else if (name === 'xmax') { gx = GX - 1 - d; gz = i; } else if (name === 'zmin') { gx = i; gz = d; } else { gx = i; gz = GZ - 1 - d; }
+          if (gx < 0 || gz < 0 || gx >= GX || gz >= GZ) { clear = false; break; }
+          const k = gz * GX + gx;
+          if (top[k] >= LOW) clear = false;
+        }
+        if (clear) ok = true;
+      }
+      freeBits.push(ok ? 1 : 0);
+    }
+    const near = (c) => name === 'xmin' ? Math.abs(c.min[0] - bx0) < 0.45 : name === 'xmax' ? Math.abs(c.max[0] - bx1) < 0.45 : name === 'zmin' ? Math.abs(c.min[2] - bz0) < 0.45 : Math.abs(c.max[2] - bz1) < 0.45;
+    const windows = wins.filter(near).map((c) => along === 0 ? [c.min[0], c.max[0], c.min[1] - floorY, c.max[1] - floorY] : [c.min[2], c.max[2], c.min[1] - floorY, c.max[1] - floorY]).map((w) => w.map((v) => +v.toFixed(2)));
+    sides[name] = { start: +(along === 0 ? bx0 : bz0).toFixed(3), res: RES, free: freeBits.join(''), windows };
+  }
+}
+
+// ---------- fachada: o que é parede opaca e o que é vidro/abertura em cada lado ----------
+// Projeta os triângulos próximos de cada lado no plano da parede (grade de 10 cm)
+// e marca as células cobertas por material opaco. O resto (vidro, vãos) vira janela.
+{
+  const isGlass = (prim) => {
+    const m = prim.getMaterial();
+    if (!m) return false;
+    if (m.getAlphaMode() === 'BLEND' || m.getBaseColorFactor()[3] < 0.9) return true;
+    if (m.getExtension('KHR_materials_transmission')) return true;
+    return /glass|window|vidro/i.test(m.getName() ?? '');
+  };
+  const glassPrim = new Map(prims.map((e) => [e, isGlass(e.prim)]));
+  const HC = Math.ceil(H / RES);
+  const defs = { xmin: [2, 0, bx0, 1], xmax: [2, 0, bx1, -1], zmin: [0, 2, bz0, 1], zmax: [0, 2, bz1, -1] };
+  for (const [name, [along, perp, line, inward]] of Object.entries(defs)) {
+    const n = along === 0 ? GX : GZ;
+    const opaque = new Uint8Array(n * HC);
+    const start = along === 0 ? bx0 : bz0;
+    for (const e of prims) {
+      if (glassPrim.get(e)) continue;
+      const { pos, idx } = e;
+      for (let t = 0; t < idx.length / 3; t++) {
+        const a = idx[t * 3] * 3, b = idx[t * 3 + 1] * 3, c = idx[t * 3 + 2] * 3;
+        // faixa da parede: até 0,35 m para dentro e 0,4 m para fora do limite
+        const dp = [pos[a + perp], pos[b + perp], pos[c + perp]].map((v) => (v - line) * inward);
+        if (Math.max(...dp) < -0.4 || Math.min(...dp) > 0.35) continue;
+        const e1 = Math.hypot(pos[b] - pos[a], pos[b + 1] - pos[a + 1], pos[b + 2] - pos[a + 2]);
+        const e2 = Math.hypot(pos[c] - pos[a], pos[c + 1] - pos[a + 1], pos[c + 2] - pos[a + 2]);
+        const steps = Math.min(200, Math.max(1, Math.ceil(Math.max(e1, e2) / 0.05)));
+        for (let i = 0; i <= steps; i++) for (let j = 0; j <= steps - i; j++) {
+          const u = i / steps, v = j / steps;
+          const p = (k) => pos[a + k] + (pos[b + k] - pos[a + k]) * u + (pos[c + k] - pos[a + k]) * v;
+          const d = (p(perp) - line) * inward;
+          if (d < -0.4 || d > 0.35) continue;
+          const gi = Math.floor((p(along) - start) / RES), gy = Math.floor((p(1) - floorY) / RES);
+          if (gi < 0 || gi >= n || gy < 0 || gy >= HC) continue;
+          opaque[gy * n + gi] = 1;
+        }
+      }
+    }
+    // aberturas: células não opacas entre 0,3 m e 0,3 m abaixo do teto, agrupadas em retângulos
+    const y0 = Math.ceil(0.3 / RES), y1 = HC - Math.ceil(0.3 / RES);
+    let holeCount = 0, total = 0;
+    const used = new Uint8Array(n * HC);
+    const rects = [];
+    for (let gy = y0; gy < y1; gy++) for (let gi = 0; gi < n; gi++) {
+      total++;
+      const k = gy * n + gi;
+      if (opaque[k]) continue;
+      holeCount++;
+      if (used[k]) continue;
+      let w = 1;
+      while (gi + w < n && !opaque[gy * n + gi + w] && !used[gy * n + gi + w]) w++;
+      let h = 1;
+      outer: while (gy + h < y1) { for (let q = 0; q < w; q++) { const kk = (gy + h) * n + gi + q; if (opaque[kk] || used[kk]) break outer; } h++; }
+      for (let r = 0; r < h; r++) for (let q = 0; q < w; q++) used[(gy + r) * n + gi + q] = 1;
+      if (w * h >= 6) rects.push([+(start + gi * RES).toFixed(2), +(gy * RES).toFixed(2), +(start + (gi + w) * RES).toFixed(2), +((gy + h) * RES).toFixed(2)]);
+    }
+    sides[name].holes = rects;
+    sides[name].openFraction = +(holeCount / Math.max(1, total)).toFixed(2);
+  }
+}
+
 fs.writeFileSync(`${OUT}/map.json`, JSON.stringify({
+  sides,
   floorY, bounds: cfg.bounds, wallHeight: H,
   boxes: boxes.map((b) => b.map((v) => +v.toFixed(3))),
   props: propOutputs.map(({ id, name, size, placements, speed }) => ({ id, name, size, speed, placements })),

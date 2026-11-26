@@ -85,6 +85,15 @@ export const PROP_TYPES = [
   prop('drawer_cabinet', 'Gaveteiro', 'moveis', [1.05, 1.88, 0.45], 0.7),
   prop('plastic_chair', 'Cadeira de plástico', 'moveis', [0.58, 0.88, 0.57], 1),
   prop('rubber_duck', 'Patinho de borracha', 'decoracao', [0.2, 0.29, 0.27], 1.25),
+  // Quintal (Poly Haven, CC0).
+  prop('garden_gnome', 'Anão de jardim', 'decoracao', [0.26, 0.6, 0.21], 1.2),
+  prop('wooden_bucket', 'Balde de madeira', 'utilidades', [0.37, 0.55, 0.34], 1.1),
+  prop('watering_can', 'Regador', 'utilidades', [0.19, 0.2, 0.45], 1.2),
+  prop('barrel', 'Barril', 'utilidades', [0.56, 0.88, 0.56], 0.95),
+  prop('planter_box', 'Floreira', 'decoracao', [0.91, 0.43, 0.41], 1),
+  prop('garden_bench', 'Banco de jardim', 'moveis', [1.17, 0.89, 0.5], 0.85),
+  prop('picnic_table', 'Mesa de piquenique', 'moveis', [2.24, 0.75, 3.02], 0.6),
+  prop('tree_stump', 'Toco de árvore', 'decoracao', [1.43, 0.57, 1.59], 0.8),
   // Objetos separados dos cenários 3D (gerados por script).
   ...SCENE_PROPS.map((p) => prop(p.id, p.name, 'moveis', p.size, p.speed)),
 ] as const satisfies readonly PropType[];

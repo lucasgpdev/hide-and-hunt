@@ -1,0 +1,294 @@
+{
+ "id": "big_school",
+ "out": "/tmp/mapout/school",
+ "yard": [
+  34,
+  40
+ ],
+ "wallHeight": 4.5,
+ "root": "/home/claude/HIDE-AND-HUNT",
+ "yardName": "P\u00e1tio",
+ "yardSurface": "tiles",
+ "outerSurface": "grass",
+ "rooms": [
+  {
+   "key": "cc",
+   "cfg": "/tmp/mapcfg/cc.json",
+   "offset": [
+    0,
+    0
+   ],
+   "label": "Sala Antiga e Corredor",
+   "surface": "wood",
+   "register": true,
+   "holes": {
+    "xmax": [
+     [
+      -3.25,
+      0.95,
+      -1.5,
+      2.65
+     ],
+     [
+      -1.25,
+      0.95,
+      0.4,
+      2.65
+     ],
+     [
+      0.65,
+      0.95,
+      2.4,
+      2.65
+     ],
+     [
+      2.65,
+      0.95,
+      4.4,
+      2.65
+     ]
+    ]
+   }
+  },
+  {
+   "key": "jp",
+   "cfg": "/tmp/mapcfg/jp.json",
+   "offset": [
+    -1.7,
+    -10.44
+   ],
+   "label": "Sala Japonesa",
+   "surface": "wood"
+  }
+ ],
+ "doors": [
+  {
+   "axis": "z",
+   "at": [
+    -4.52,
+    -3.52
+   ],
+   "range": [
+    -4.8,
+    -3.4
+   ]
+  },
+  {
+   "axis": "x",
+   "at": [
+    -6.22,
+    -5.62
+   ],
+   "range": [
+    3.0,
+    4.4
+   ],
+   "exterior": true
+  },
+  {
+   "axis": "x",
+   "at": [
+    2.75,
+    3.35
+   ],
+   "range": [
+    -9.14,
+    -7.74
+   ],
+   "exterior": true
+  },
+  {
+   "axis": "x",
+   "at": [
+    -6.75,
+    -6.15
+   ],
+   "range": [
+    -7.44,
+    -6.04
+   ],
+   "exterior": true
+  }
+ ],
+ "trees": [
+  {
+   "file": "tree_a",
+   "count": 3,
+   "radius": 1.8,
+   "trunk": 0.3,
+   "height": 3.2
+  },
+  {
+   "file": "tree_b",
+   "count": 3,
+   "radius": 1.6,
+   "trunk": 0.3,
+   "height": 4.4
+  },
+  {
+   "file": "fir_b",
+   "count": 2,
+   "radius": 1.9,
+   "trunk": 0.3,
+   "height": 7
+  },
+  {
+   "file": "shrub_a",
+   "count": 3,
+   "radius": 0.8,
+   "trunk": 0.5,
+   "height": 1.6
+  },
+  {
+   "file": "shrub_b",
+   "count": 3,
+   "radius": 0.65,
+   "trunk": 0.4,
+   "height": 1.4
+  },
+  {
+   "file": "shrub_c",
+   "count": 2,
+   "radius": 1.0,
+   "trunk": 0.7,
+   "height": 1.25
+  },
+  {
+   "file": "shrub_d",
+   "count": 3,
+   "radius": 0.55,
+   "trunk": 0.38,
+   "height": 1.15
+  }
+ ],
+ "yardProps": [
+  {
+   "type": "garden_bench",
+   "size": [
+    1.17,
+    0.89,
+    0.5
+   ],
+   "count": 4
+  },
+  {
+   "type": "picnic_table",
+   "size": [
+    2.24,
+    0.75,
+    3.02
+   ],
+   "count": 3
+  },
+  {
+   "type": "plastic_chair",
+   "size": [
+    0.58,
+    0.88,
+    0.57
+   ],
+   "count": 5
+  },
+  {
+   "type": "trash_can",
+   "size": [
+    0.45,
+    0.75,
+    0.45
+   ],
+   "count": 4
+  },
+  {
+   "type": "cone",
+   "size": [
+    0.4,
+    0.75,
+    0.4
+   ],
+   "count": 4
+  },
+  {
+   "type": "backpack",
+   "size": [
+    0.32,
+    0.45,
+    0.2
+   ],
+   "count": 4
+  },
+  {
+   "type": "box",
+   "size": [
+    0.6,
+    0.5,
+    0.6
+   ],
+   "count": 4
+  },
+  {
+   "type": "wooden_crate",
+   "size": [
+    0.75,
+    0.35,
+    0.38
+   ],
+   "count": 3
+  },
+  {
+   "type": "planter_box",
+   "size": [
+    0.91,
+    0.43,
+    0.41
+   ],
+   "count": 4
+  },
+  {
+   "type": "barrel",
+   "size": [
+    0.56,
+    0.88,
+    0.56
+   ],
+   "count": 2
+  },
+  {
+   "type": "bucket",
+   "size": [
+    0.32,
+    0.34,
+    0.32
+   ],
+   "count": 2
+  }
+ ],
+ "yardSpawns": 16,
+ "backdrop": [
+  "fir_a",
+  "fir_b",
+  "fir_c",
+  "tree_b"
+ ],
+ "meta": {
+  "name": "Escola",
+  "description": "Sala de aula antiga com corredor, sala japonesa e um p\u00e1tio grande cercado, com bancos, mesas e \u00e1rvores.",
+  "source": "Classroom (Christophe Seux, CC0) e Japanese Classroom (NovaZeeke, CC-BY 3.0); p\u00e1tio: Poly Haven (CC0).",
+  "theme": {
+   "background": "#cfe0ee",
+   "floor": "#8d8b86",
+   "wall": "#efe7da",
+   "ambient": "#fff4e6",
+   "fog": "#cfe0ee"
+  },
+  "sunFrom": [
+   0.8,
+   1.5,
+   0.6
+  ],
+  "sunIntensity": 1.8,
+  "sky": "noon_grass",
+  "lightColor": "#f4f8ff",
+  "lightIntensity": 0.16
+ },
+ "skipRooms": false
+}

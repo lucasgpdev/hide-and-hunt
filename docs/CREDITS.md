@@ -55,9 +55,15 @@ Mudanças feitas aqui (com as ferramentas de `tools/scene-maps`): objetos repeti
 
 Modelos de [Poly Haven](https://polyhaven.com) (licença **CC0**), reduzidos para texturas WebP de até 1024 px e geometria meshopt: Ottoman 01, Arm Chair 01, Potted Plant 02, Wicker Basket 01, Wooden Stool 01, Side Table 01, Ceramic Vase 01, Television 01, Book Encyclopedia Set 01, Boombox, Throw Pillows 01, Wooden Crate 01, Vintage Grandfather Clock 01, Lantern 01, Drawer Cabinet, Plastic Monobloc Chair 01 e Rubber Duck Toy. Céus vistos pelas janelas: HDRIs *Noon Grass* e *Kloofendal 48d Partly Cloudy (Pure Sky)*, convertidos para panoramas JPG.
 
+## Quintal e pátio (Poly Haven, CC0) — `client/public/models/yard/*.glb`, `client/public/models/props/yd_*.glb`
+
+Vegetação e objetos de [Poly Haven](https://polyhaven.com) (licença **CC0**) usados nas áreas externas da Casa Grande e da Escola: Fir Sapling Medium, Island Tree 02, Shrub 01/02/04, Tree Small 02 (variações separadas em arquivos próprios), Barrel 01, Garden Gnome, Painted Wooden Bench, Planter Box 01, Tree Stump 01, Watering Can Metal 01, Wooden Bucket 01 e Wooden Picnic Table. Texturas WebP de até 1024 px e geometria meshopt.
+
+Os cômodos desses mapas são os mesmos cenários listados acima (The White Room, Country Kitchen, The Grey & White Room, The Breakfast Room, Japanese Classroom e Classroom), recortados com portas e cercados por paredes externas, telhado e cerca gerados por script (`tools/scene-maps/compose.mjs`).
+
 ## Sons (CC0) — `client/public/sounds/*.mp3`
 
-Pacotes da [Kenney](https://kenney.nl) (licença **CC0**): *Impact Sounds* (passos em madeira, carpete e piso frio; impactos), *RPG Audio* (portas, tecido, rangidos, trinco) e *Interface Sounds* (cliques e interruptor). Convertidos para MP3 mono.
+Pacotes da [Kenney](https://kenney.nl) (licença **CC0**): *Impact Sounds* (passos em madeira, carpete, piso frio, grama e concreto; impactos), *RPG Audio* (portas, tecido, rangidos, trinco) e *Interface Sounds* (cliques e interruptor). Convertidos para MP3 mono.
 
 ## Bibliotecas
 

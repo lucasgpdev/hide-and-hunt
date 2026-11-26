@@ -74,7 +74,7 @@
  {
   "map": "white_room",
   "id": "floor_lamp",
-  "name": "Abajur de ch\u00e3o",
+  "name": "Abajur de chão",
   "size": [
    0.386,
    1.571,
@@ -94,5 +94,41 @@
   ],
   "speed": 1,
   "file": "sc_sofa_cushion.glb"
+ },
+ {
+  "map": "big_school",
+  "id": "cc_desk",
+  "name": "Carteira antiga",
+  "size": [
+   0.478,
+   0.913,
+   0.689
+  ],
+  "speed": 1,
+  "file": "sc_cc_desk.glb"
+ },
+ {
+  "map": "big_school",
+  "id": "cc_leather_chair",
+  "name": "Poltrona de couro",
+  "size": [
+   0.621,
+   0.935,
+   0.578
+  ],
+  "speed": 1,
+  "file": "sc_cc_leather_chair.glb"
+ },
+ {
+  "map": "big_school",
+  "id": "cc_bin",
+  "name": "Cesto de lixo",
+  "size": [
+   0.337,
+   0.433,
+   0.341
+  ],
+  "speed": 1,
+  "file": "sc_cc_bin.glb"
  }
 ]
