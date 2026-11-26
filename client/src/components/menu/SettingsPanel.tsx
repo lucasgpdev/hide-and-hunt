@@ -115,6 +115,7 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
               <option value={30}>30 (economia de bateria)</option>
             </select>
           </label>
+          <Toggle label="Balanço da câmera ao andar (1ª pessoa)" checked={settings.headBob} onChange={(v) => set({ headBob: v })} />
           <Toggle label="Sombras" checked={settings.shadows} onChange={(v) => set({ shadows: v })} />
           <Toggle label="Ajuste automático (baixa a resolução se o FPS cair)" checked={settings.autoQuality} onChange={(v) => set({ autoQuality: v })} />
           <Slider label="Distância de renderização" value={settings.renderDistance} min={25} max={120} step={5} format={(v) => `${v} m`} onChange={(v) => set({ renderDistance: v })} />

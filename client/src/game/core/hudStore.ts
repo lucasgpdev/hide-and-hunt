@@ -9,6 +9,8 @@ export interface HudState {
   fps: number;
   /** Lanterna do jogador ligada. */
   flashlight: boolean;
+  /** O que está na mira: muda o desenho da mira. */
+  aimKind: 'none' | 'use' | 'transform' | 'capture';
   pointerLocked: boolean;
   /** Frações 0..1 do tempo de recarga restante. */
   transformCooldown: number;
@@ -27,6 +29,7 @@ const initial: HudState = {
   spectating: null,
   fps: 0,
   flashlight: false,
+  aimKind: 'none',
   pointerLocked: false,
   transformCooldown: 0,
   captureCooldown: 0,

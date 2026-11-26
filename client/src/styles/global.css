@@ -2317,3 +2317,24 @@ kbd {
 @media (pointer: coarse) {
   .hud-flashlight { bottom: auto; top: max(64px, env(safe-area-inset-top)); }
 }
+
+/* Mira que muda conforme o alvo */
+.crosshair {
+  transition: transform 0.12s ease, background 0.12s, box-shadow 0.12s, width 0.12s, height 0.12s, margin 0.12s;
+}
+.crosshair::before {
+  content: '';
+  position: absolute;
+  inset: -9px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  transition: border-color 0.12s, inset 0.12s, opacity 0.12s;
+  opacity: 0;
+}
+.crosshair-use::before { opacity: 1; border-color: rgba(255, 255, 255, 0.85); inset: -8px; }
+.crosshair-transform { background: #6fe3c7; }
+.crosshair-transform::before { opacity: 1; border-color: rgba(111, 227, 199, 0.95); inset: -10px; border-style: dashed; }
+.crosshair-capture { background: #ff5a4f; transform: scale(1.15); }
+.crosshair-capture::before { opacity: 1; border-color: rgba(255, 90, 79, 0.95); inset: -11px; animation: crosshair-pulse 0.9s ease-in-out infinite; }
+@keyframes crosshair-pulse { 50% { inset: -14px; opacity: 0.6; } }
+@media (prefers-reduced-motion: reduce) { .crosshair-capture::before { animation: none; } }

@@ -20,6 +20,10 @@ export class ThirdPersonCamera {
   /** Primeira pessoa: a câmera fica nos olhos do alvo. */
   firstPerson = false;
   private eyeY = 0;
+  /** Balanço ao andar (1ª pessoa): velocidade no chão e se está ligado. */
+  bob = { speed: 0, grounded: true, enabled: true };
+  private bobPhase = 0;
+  private bobAmount = 0;
 
   constructor(
     readonly camera: THREE.PerspectiveCamera,
@@ -85,10 +89,16 @@ export class ThirdPersonCamera {
     if (!this.initialized || Math.abs(eye - this.eyeY) > 1.5) this.eyeY = eye;
     else this.eyeY += (eye - this.eyeY) * Math.min(1, dt * 18);
     this.initialized = true;
-    this.camera.position.set(target.x, this.eyeY, target.z);
+    const moving = this.bob.enabled && this.bob.grounded ? Math.min(1, this.bob.speed / 5) : 0;
+    this.bobAmount += (moving - this.bobAmount) * Math.min(1, dt * 8);
+    this.bobPhase += dt * (4 + this.bob.speed * 1.6);
+    const up = Math.abs(Math.sin(this.bobPhase)) * 0.032 * this.bobAmount;
+    const side = Math.cos(this.bobPhase) * 0.018 * this.bobAmount;
+    this.camera.position.set(target.x + Math.cos(this.yaw) * side, this.eyeY + up - 0.016 * this.bobAmount, target.z - Math.sin(this.yaw) * side);
     const cosP = Math.cos(this.pitch);
     // Olha para frente (o oposto da direção em que a câmera de 3ª pessoa fica).
-    this.camera.lookAt(target.x - Math.sin(this.yaw) * cosP, this.eyeY - Math.sin(this.pitch), target.z - Math.cos(this.yaw) * cosP);
+    const p = this.camera.position;
+    this.camera.lookAt(p.x - Math.sin(this.yaw) * cosP, p.y - Math.sin(this.pitch), p.z - Math.cos(this.yaw) * cosP);
     // A câmera de 3ª pessoa recomeça do lugar certo se o jogador trocar.
     this.smoothed.copy(this.camera.position);
   }

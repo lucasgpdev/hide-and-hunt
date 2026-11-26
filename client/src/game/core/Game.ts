@@ -7,6 +7,7 @@ import {
   buildMapPhysics,
   EMOTES,
   getMap,
+  getSkin,
   getPropType,
   MoveFlag,
   setDoorOpen,
@@ -22,6 +23,7 @@ import { playFootstep, playSound, playSoundAt, preloadSamples, setAlarm, setAmbi
 import type { NetworkClient } from '../../multiplayer/NetworkClient';
 import { keyLabel, settingsStore, type GameSettings } from '../../settings/settings';
 import { ThirdPersonCamera } from '../camera/ThirdPersonCamera';
+import { ViewModel } from '../camera/ViewModel';
 import { PlayerAvatar } from '../characters/PlayerAvatar';
 import { RemotePlayers } from '../characters/RemotePlayers';
 import { Effects } from '../effects/Effects';
@@ -119,6 +121,7 @@ export class Game {
   private flashlightOn = false;
   private lastRoomState: string | null = null;
   private readonly remoteLights: RemoteFlashlights;
+  private readonly viewModel: ViewModel;
   private readonly tmpDir = new THREE.Vector3();
   private readonly tmpRight = new THREE.Vector3();
   private readonly tmpUp = new THREE.Vector3();
@@ -175,6 +178,7 @@ export class Game {
     this.flashlight = new THREE.SpotLight('#fff1cf', 0, 22, Math.PI / 6.5, 0.6, 1.4);
     this.scene.add(this.flashlight, this.flashlight.target);
     // Luzes para as lanternas dos outros (quantidade fixa: não recompila materiais).
+    this.viewModel = new ViewModel(this.camera);
     this.remoteLights = new RemoteFlashlights(this.scene, this.settings.graphics === 'low' ? 1 : 3);
 
     this.applySettings(this.settings);
@@ -205,6 +209,7 @@ export class Game {
     this.remotes.dispose();
     this.localAvatar.dispose();
     this.remoteLights.dispose();
+    this.viewModel.dispose();
     this.destroyWorld();
     this.renderer.dispose();
     this.renderer.domElement.remove();
@@ -291,6 +296,8 @@ export class Game {
 
     if (this.me) {
       this.localAvatar.setIdentity(this.me.team, this.me.nickname, this.me.skin);
+      const skin = getSkin(this.me.skin);
+      this.viewModel.setColors(skin.color, skin.accent);
       if (this.localAvatar.setDisguise(this.me.disguise)) {
         this.world?.controller.setDisguise(this.me.disguise);
         if (this.me.disguise) this.effects.transform(this.localAvatar.root.position, 1, this.me.effect);
@@ -597,6 +604,9 @@ export class Game {
       this.localAvatar.update(dt, world.controller.horizontalSpeed, world.controller.grounded);
       this.sendMove(serverNow, frozen);
       this.cameraRig.firstPerson = firstPerson;
+      this.cameraRig.bob.speed = world.controller.horizontalSpeed;
+      this.cameraRig.bob.grounded = world.controller.grounded;
+      this.cameraRig.bob.enabled = this.settings.headBob && !this.settings.reducedMotion;
       this.cameraRig.update(p, world.controller.height, dt, world.physics.world, world.controller.colliderHandle);
       this.setOwnBodyHidden(firstPerson);
       this.spectateId = null;
@@ -636,6 +646,15 @@ export class Game {
     this.flashlight.intensity = lightOn ? (dark ? 42 : 16) : 0;
     if (lightOn) this.placeFlashlight();
     this.localAvatar.setFlashlight(lightOn);
+    this.viewModel.update(dt, {
+      visible: alive && this.cameraRig.firstPerson && !me?.disguise && !this.localAvatar.emoting,
+      speed: world.controller.horizontalSpeed,
+      grounded: world.controller.grounded,
+      flashlight: lightOn,
+      yaw: this.cameraRig.yaw,
+      pitch: this.cameraRig.pitch,
+      bob: this.settings.headBob && !this.settings.reducedMotion,
+    });
     this.remoteLights.update(this.remotes.flashlightSources(), this.camera.position, dark ? 36 : 14);
 
     this.hudTime += dt;
@@ -644,6 +663,13 @@ export class Game {
       const nowMs = Date.now();
       hudStore.set({
         prompt: this.aim?.label ?? null,
+        aimKind: !this.aim?.label
+          ? 'none'
+          : this.aim.label.includes('Capturar')
+            ? 'capture'
+            : this.aim.label.startsWith('F')
+              ? 'transform'
+              : 'use',
         transformCooldown: clamp01((this.transformReadyAt - nowMs) / (BALANCE.transform.cooldownSeconds * 1000)),
         captureCooldown: clamp01((this.captureReadyAt - nowMs) / (BALANCE.capture.missPenaltySeconds * 1000)),
         spectating:
@@ -710,9 +736,9 @@ export class Game {
     const look = this.camera.getWorldDirection(this.tmpDir);
     const light = this.flashlight;
     if (this.cameraRig.firstPerson) {
-      // um pouco à direita e abaixo dos olhos, como se estivesse na mão
-      const right = this.tmpRight.set(-look.z, 0, look.x).normalize();
-      light.position.copy(this.camera.position).addScaledVector(right, 0.22).add(this.tmpUp.set(0, -0.25, 0));
+      // sai da lente da lanterna na mão
+      this.camera.updateMatrixWorld();
+      this.viewModel.lens.getWorldPosition(light.position);
     } else {
       const root = this.localAvatar.root.position;
       light.position.set(root.x, root.y + 1.35, root.z).addScaledVector(look, 0.35);
@@ -928,6 +954,7 @@ export class Game {
     if (wantsCapture && me.team === 'HUNTERS' && room.state === 'HUNTING' && aim.label) {
       if (now < this.captureReadyAt) return;
       this.captureReadyAt = now + BALANCE.capture.cooldownSeconds * 1000;
+      this.viewModel.thrust();
       const targetId = aim.playerId ?? null;
       void this.network.capture(targetId, aim.cloneId).then((result) => {
         if (!result.ok) {

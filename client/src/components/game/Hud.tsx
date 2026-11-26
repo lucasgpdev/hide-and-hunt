@@ -139,7 +139,7 @@ export function Hud({ room, localId, feed, latencyMs }: Props) {
       {hud.emoteMenu && <EmoteMenu unlocked={net.profile?.unlockedEmotes ?? []} />}
       {inMatch && me?.alive && <AbilityBar team={me.team} abilities={net.abilities} enabled={room.settings.abilities} />}
 
-      {hud.pointerLocked && !blind && <div className="crosshair" aria-hidden="true" />}
+      {hud.pointerLocked && !blind && <div className={`crosshair crosshair-${hud.aimKind}`} aria-hidden="true" />}
       {hud.prompt && hud.pointerLocked && <div className="hud-prompt">{hud.prompt}</div>}
       {hud.toast && <div className={`hud-toast hud-toast--${hud.toast.tone}`}>{hud.toast.text}</div>}
 

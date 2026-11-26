@@ -77,6 +77,8 @@ export interface GameSettings {
   shadows: boolean;
   /** Câmera em primeira pessoa (olhos do personagem) ou terceira (atrás dele). */
   cameraMode: 'first' | 'third';
+  /** Balanço da câmera e da mão ao andar (1ª pessoa). */
+  headBob: boolean;
   /** Baixa a resolução sozinho quando o FPS cai (e volta quando melhora). */
   autoQuality: boolean;
   /** Distância de renderização (névoa e corte da câmera), em metros. */
@@ -110,6 +112,7 @@ export const DEFAULT_SETTINGS: GameSettings = {
   graphics: 'medium',
   shadows: true,
   cameraMode: 'first',
+  headBob: true,
   autoQuality: true,
   renderDistance: 60,
   showFps: true,
