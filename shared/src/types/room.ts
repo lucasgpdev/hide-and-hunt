@@ -85,6 +85,8 @@ export const MoveFlag = {
   Running: 2,
   Grounded: 4,
   Alive: 8,
+  /** Lanterna ligada (só na forma humana). */
+  Flashlight: 16,
 } as const;
 
 /** [id, x, y, z, yaw, flags] */

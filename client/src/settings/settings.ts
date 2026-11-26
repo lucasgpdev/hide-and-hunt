@@ -19,6 +19,7 @@ export const KEY_ACTIONS = [
   'ability4',
   'scoreboard',
   'camera',
+  'flashlight',
 ] as const;
 export type KeyAction = (typeof KEY_ACTIONS)[number];
 
@@ -40,6 +41,7 @@ export const KEY_ACTION_LABEL: Record<KeyAction, string> = {
   ability4: 'Habilidade 4',
   scoreboard: 'Placar',
   camera: 'Trocar câmera (1ª / 3ª pessoa)',
+  flashlight: 'Ligar/desligar lanterna',
 };
 
 export const DEFAULT_KEYS: Record<KeyAction, string> = {
@@ -60,6 +62,7 @@ export const DEFAULT_KEYS: Record<KeyAction, string> = {
   ability4: 'Digit4',
   scoreboard: 'Tab',
   camera: 'KeyV',
+  flashlight: 'KeyL',
 };
 
 /** Configurações do jogador (item 39). Salvas neste navegador. */

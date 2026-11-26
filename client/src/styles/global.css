@@ -2267,3 +2267,53 @@ kbd {
     touch-action: none;
   }
 }
+
+/* Lanterna: indicador discreto no canto inferior esquerdo */
+.hud-flashlight {
+  position: absolute;
+  left: max(16px, env(safe-area-inset-left));
+  bottom: max(96px, calc(env(safe-area-inset-bottom) + 96px));
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px 6px 8px;
+  border-radius: 999px;
+  background: rgba(10, 12, 16, 0.55);
+  color: rgba(232, 230, 225, 0.7);
+  font-size: 0.82rem;
+  backdrop-filter: blur(6px);
+  transition: color 0.2s, background 0.2s, box-shadow 0.2s;
+  pointer-events: none;
+}
+.hud-flashlight kbd {
+  font: inherit;
+  font-size: 0.72rem;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+}
+.hud-flashlight-icon {
+  width: 18px;
+  height: 10px;
+  border-radius: 2px 5px 5px 2px;
+  background: linear-gradient(90deg, #3a3e45 0 62%, #5b6069 62% 100%);
+  position: relative;
+}
+.hud-flashlight.on {
+  color: #fff3d6;
+  background: rgba(40, 32, 14, 0.62);
+  box-shadow: 0 0 18px rgba(255, 220, 140, 0.25);
+}
+.hud-flashlight.on .hud-flashlight-icon::after {
+  content: '';
+  position: absolute;
+  left: 18px;
+  top: -6px;
+  width: 20px;
+  height: 22px;
+  background: radial-gradient(ellipse at left, rgba(255, 236, 180, 0.85), transparent 70%);
+  clip-path: polygon(0 35%, 100% 0, 100% 100%, 0 65%);
+}
+@media (pointer: coarse) {
+  .hud-flashlight { bottom: auto; top: max(64px, env(safe-area-inset-top)); }
+}

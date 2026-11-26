@@ -128,8 +128,18 @@ export class RemotePlayers {
       this.positions.set(id, new THREE.Vector3(x, y, z));
 
       remote.avatar.setNameVisible(nameVisible(id, remote.avatar));
+      remote.avatar.setFlashlight((latest.flags & MoveFlag.Flashlight) !== 0);
       remote.avatar.update(dt, (b.flags & MoveFlag.Moving) !== 0 ? Math.max(speed, 1) : speed, (b.flags & MoveFlag.Grounded) !== 0);
     }
+  }
+
+  /** Raízes dos jogadores visíveis com a lanterna ligada (para as luzes reais). */
+  flashlightSources(): THREE.Object3D[] {
+    const list: THREE.Object3D[] = [];
+    for (const remote of this.remotes.values()) {
+      if (remote.present && remote.avatar.flashlightOn && !remote.avatar.disguise) list.push(remote.avatar.root);
+    }
+    return list;
   }
 
   dispose(): void {

@@ -401,7 +401,8 @@ export class Room {
     if (horizontal > 0.05) player.lastMovedAt = now;
     player.position = [to[0], to[1], to[2]];
     player.yaw = move.yaw;
-    player.flags = (move.f & (MoveFlag.Moving | MoveFlag.Running | MoveFlag.Grounded)) | MoveFlag.Alive;
+    const allowed = MoveFlag.Moving | MoveFlag.Running | MoveFlag.Grounded | (player.disguise ? 0 : MoveFlag.Flashlight);
+    player.flags = (move.f & allowed) | MoveFlag.Alive;
   }
 
   transform(playerId: string, propId: string): ActionResult {

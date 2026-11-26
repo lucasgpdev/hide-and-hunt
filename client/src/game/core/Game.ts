@@ -27,6 +27,7 @@ import { RemotePlayers } from '../characters/RemotePlayers';
 import { Effects } from '../effects/Effects';
 import { loadMapAssets, mapAssetsReady } from '../maps/mapAssets';
 import { MapView } from '../maps/MapView';
+import { RemoteFlashlights } from '../effects/flashlight';
 import { installFastRaycast } from '../physics/fastRaycast';
 import { setMaxAnisotropy } from '../materials/textures';
 import { createPropModel } from '../objects/propModels';
@@ -113,6 +114,13 @@ export class Game {
   /** Mapa cujos arquivos ainda estão baixando antes da troca. */
   private waitingMap: string | null = null;
   private cameraHintShown = false;
+  /** Lanterna do jogador local (tecla L). */
+  private flashlightOn = false;
+  private lastRoomState: string | null = null;
+  private readonly remoteLights: RemoteFlashlights;
+  private readonly tmpDir = new THREE.Vector3();
+  private readonly tmpRight = new THREE.Vector3();
+  private readonly tmpUp = new THREE.Vector3();
   private readonly unsubscribers: (() => void)[] = [];
   private settings: GameSettings = settingsStore.get();
 
@@ -162,10 +170,11 @@ export class Game {
     this.scene.add(this.localAvatar.root);
 
     // Lanterna do caçador local (presa à câmera).
-    this.flashlight = new THREE.SpotLight('#fff1cf', 0, 24, Math.PI / 7, 0.45, 1.2);
-    this.flashlight.position.set(0.3, -0.2, 0);
-    this.flashlight.target.position.set(0, 0, -5);
-    this.camera.add(this.flashlight, this.flashlight.target);
+    // Posicionada a cada quadro: na mão (1ª pessoa) ou no peito do personagem (3ª).
+    this.flashlight = new THREE.SpotLight('#fff1cf', 0, 22, Math.PI / 6.5, 0.6, 1.4);
+    this.scene.add(this.flashlight, this.flashlight.target);
+    // Luzes para as lanternas dos outros (quantidade fixa: não recompila materiais).
+    this.remoteLights = new RemoteFlashlights(this.scene, this.settings.graphics === 'low' ? 1 : 3);
 
     this.applySettings(this.settings);
     this.unsubscribers.push(
@@ -194,6 +203,7 @@ export class Game {
     this.effects.dispose();
     this.remotes.dispose();
     this.localAvatar.dispose();
+    this.remoteLights.dispose();
     this.destroyWorld();
     this.renderer.dispose();
     this.renderer.domElement.remove();
@@ -546,6 +556,13 @@ export class Game {
     this.cameraRig.rotate(mouse.dx, mouse.dy, this.settings.mouseSensitivity, this.settings.invertY);
     const actions = this.input.consumeActions();
     const serverNow = this.network.serverNow();
+    if (actions.includes('flashlight')) this.toggleFlashlight();
+    // Caçadores começam a caçada com a lanterna acesa; a cada partida nova ela começa apagada.
+    if (room.state !== this.lastRoomState) {
+      if (room.state === 'HUNTING' && me?.team === 'HUNTERS') this.setFlashlight(true, false);
+      else if (room.state === 'WAITING' || room.state === 'HIDING') this.setFlashlight(false, false);
+      this.lastRoomState = room.state;
+    }
     if (actions.includes('camera')) {
       const cameraMode = this.settings.cameraMode === 'first' ? 'third' : 'first';
       settingsStore.set({ cameraMode });
@@ -604,9 +621,12 @@ export class Game {
     this.camera.getWorldDirection(forward);
     setListener(this.camera.position, forward);
 
-    const hunterLight = alive && me?.team === 'HUNTERS' && this.settings.graphics !== 'low';
     const dark = room.event?.type === 'blackout' || room.lightsOff.length > 0 || room.ambience.lighting === 'night';
-    this.flashlight.intensity = hunterLight ? (dark ? 90 : 60) : 0;
+    const lightOn = alive && this.flashlightOn && !me?.disguise;
+    this.flashlight.intensity = lightOn ? (dark ? 42 : 16) : 0;
+    if (lightOn) this.placeFlashlight();
+    this.localAvatar.setFlashlight(lightOn);
+    this.remoteLights.update(this.remotes.flashlightSources(), this.camera.position, dark ? 36 : 14);
 
     this.hudTime += dt;
     if (this.hudTime > 0.1) {
@@ -664,12 +684,44 @@ export class Game {
     if (c.moving) flags |= MoveFlag.Moving;
     if (c.running) flags |= MoveFlag.Running;
     if (c.grounded) flags |= MoveFlag.Grounded;
+    if (this.flashlightOn && !this.me?.disguise) flags |= MoveFlag.Flashlight;
     this.network.sendMove({
       tid: this.teleport.teleportId,
       p: [round3(c.position.x), round3(c.position.y), round3(c.position.z)],
       yaw: round3(this.localAvatar.root.rotation.y),
       f: flags,
     });
+  }
+
+  /** Luz da lanterna local: sai da mão/peito e aponta para onde a câmera olha. */
+  private placeFlashlight(): void {
+    const look = this.camera.getWorldDirection(this.tmpDir);
+    const light = this.flashlight;
+    if (this.cameraRig.firstPerson) {
+      // um pouco à direita e abaixo dos olhos, como se estivesse na mão
+      const right = this.tmpRight.set(-look.z, 0, look.x).normalize();
+      light.position.copy(this.camera.position).addScaledVector(right, 0.22).add(this.tmpUp.set(0, -0.25, 0));
+    } else {
+      const root = this.localAvatar.root.position;
+      light.position.set(root.x, root.y + 1.35, root.z).addScaledVector(look, 0.35);
+    }
+    light.target.position.copy(light.position).addScaledVector(look, 6);
+    light.target.updateMatrixWorld();
+  }
+
+  private toggleFlashlight(): void {
+    if (this.me?.disguise) {
+      hudStore.toast('Disfarçado de objeto não dá para usar a lanterna', 'warn');
+      return;
+    }
+    this.setFlashlight(!this.flashlightOn, true);
+  }
+
+  private setFlashlight(on: boolean, feedback: boolean): void {
+    if (on === this.flashlightOn) return;
+    this.flashlightOn = on;
+    hudStore.set({ flashlight: on });
+    if (feedback) playSound('switch');
   }
 
   /** Em 1ª pessoa o próprio corpo sai da câmera (camada 1), mas a sombra continua. */

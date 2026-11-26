@@ -7,6 +7,8 @@ export interface HudState {
   /** Nome do jogador acompanhado no modo espectador. */
   spectating: string | null;
   fps: number;
+  /** Lanterna do jogador ligada. */
+  flashlight: boolean;
   pointerLocked: boolean;
   /** Frações 0..1 do tempo de recarga restante. */
   transformCooldown: number;
@@ -24,6 +26,7 @@ const initial: HudState = {
   prompt: null,
   spectating: null,
   fps: 0,
+  flashlight: false,
   pointerLocked: false,
   transformCooldown: 0,
   captureCooldown: 0,

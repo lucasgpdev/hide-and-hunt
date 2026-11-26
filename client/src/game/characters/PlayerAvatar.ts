@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { getSkin, type Team } from '@hh/shared';
 import { material } from '../objects/primitives';
 import { createPropModel } from '../objects/propModels';
+import { createBeam } from '../effects/flashlight';
 import { buildBoundsTrees } from '../physics/fastRaycast';
 import { AnimatedCharacter } from './AnimatedCharacter';
 import { CharacterModel } from './CharacterModel';
@@ -23,6 +24,9 @@ export class PlayerAvatar {
   private body = new THREE.Group();
   private prop: THREE.Object3D | null = null;
   private flashlight: THREE.Object3D | null = null;
+  /** Facho de luz visível (lanterna ligada). */
+  private readonly beam = createBeam();
+  flashlightOn = false;
   private readonly nameplate: THREE.Sprite;
   private nameTexture: THREE.CanvasTexture;
   disguise: string | null = null;
@@ -45,6 +49,7 @@ export class PlayerAvatar {
     this.hitbox.position.y = 0.9;
     this.hitbox.userData.playerId = playerId;
     this.root.add(this.hitbox);
+    this.root.add(this.beam);
     this.nameTexture = makeNameTexture(nickname, team);
     this.nameplate = new THREE.Sprite(new THREE.SpriteMaterial({ map: this.nameTexture, depthTest: false, transparent: true }));
     this.nameplate.scale.set(1.6, 0.4, 1);
@@ -52,6 +57,12 @@ export class PlayerAvatar {
     this.nameplate.renderOrder = 10;
     this.root.add(this.nameplate);
     this.buildCharacter();
+  }
+
+  /** Liga/desliga a lanterna (só aparece na forma humana). */
+  setFlashlight(on: boolean): void {
+    this.flashlightOn = on;
+    this.beam.visible = on && !this.disguise;
   }
 
   get emotes(): string[] {
@@ -74,6 +85,7 @@ export class PlayerAvatar {
   setDisguise(disguise: string | null): boolean {
     if (disguise === this.disguise) return false;
     this.disguise = disguise;
+    this.beam.visible = this.flashlightOn && !disguise;
     if (this.prop) {
       this.root.remove(this.prop);
       this.prop = null;

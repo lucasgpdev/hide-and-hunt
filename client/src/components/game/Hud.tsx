@@ -4,7 +4,7 @@ import { playSound } from '../../audio/sound';
 import { useHud } from '../../game/core/hudStore';
 import type { FeedItem } from '../../multiplayer/NetworkClient';
 import { network } from '../../multiplayer/NetworkClient';
-import { useSettings } from '../../settings/settings';
+import { keyLabel, useSettings } from '../../settings/settings';
 import { useNetwork } from '../../hooks/useNetwork';
 import { AbilityBar, EmoteMenu } from './AbilityBar';
 
@@ -127,6 +127,12 @@ export function Hud({ room, localId, feed, latencyMs }: Props) {
       {partner && (
         <div className="hud-partner">
           Parceiro: <strong>{partner.nickname}</strong> {partner.alive ? '' : '(capturado)'}
+        </div>
+      )}
+      {me?.alive && !me.disguise && (
+        <div className={`hud-flashlight${hud.flashlight ? ' on' : ''}`} aria-live="polite">
+          <span className="hud-flashlight-icon" aria-hidden="true" />
+          Lanterna {hud.flashlight ? 'ligada' : 'desligada'} <kbd>{keyLabel(settings.keys.flashlight)}</kbd>
         </div>
       )}
       {speakingNames.length > 0 && <div className="hud-voice">🎙 {speakingNames.join(', ')}</div>}
